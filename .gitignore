@@ -7,3 +7,8 @@ imp_references_file
 .env.*.local
 !*.env.example
 !**/.env.example
+
+# Python caches
+__pycache__/
+**/__pycache__/
+*.pyc
