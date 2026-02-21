@@ -1,6 +1,7 @@
 'use client'
 import { useThemeStore } from '@/store/useThemeStore'
 import { useEffect } from 'react'
+import { Providers } from './providers'
 import './globals.css'
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -18,7 +19,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link href="https://fonts.googleapis.com/css2?family=Silkscreen&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet" />
         <title>TradeOptimize AI</title>
       </head>
-      <body>{children}</body>
+      <body>
+        <Providers>{children}</Providers>
+      </body>
     </html>
   )
 }
