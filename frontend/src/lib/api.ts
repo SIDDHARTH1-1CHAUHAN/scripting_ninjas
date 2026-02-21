@@ -5,7 +5,7 @@ const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK === 'true'
 const MOCK_DELAY = 1500
 
 // Classification API
-export async function classifyProduct(description: string, image?: File) {
+export async function classifyProduct(description: string, _image?: File) {
   if (USE_MOCK) {
     await new Promise(r => setTimeout(r, MOCK_DELAY))
     return {
