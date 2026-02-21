@@ -24,7 +24,7 @@ interface ClassificationResult {
 export default function ClassifyPage() {
   const [description, setDescription] = useState('')
   const [image, setImage] = useState<File | null>(null)
-  const [specs, setSpecs] = useState({
+  const [_specs, setSpecs] = useState({
     material: '',
     weight: '',
     dimensions: '',
