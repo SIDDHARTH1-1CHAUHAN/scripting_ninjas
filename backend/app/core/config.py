@@ -1,6 +1,14 @@
 from functools import lru_cache
+import os
 
-from pydantic_settings import BaseSettings
+try:
+    from pydantic_settings import BaseSettings
+    _HAS_PYDANTIC_SETTINGS = True
+except Exception:  # pragma: no cover - optional dependency
+    _HAS_PYDANTIC_SETTINGS = False
+
+    class BaseSettings:  # minimal fallback
+        pass
 
 
 class Settings(BaseSettings):
@@ -25,8 +33,29 @@ class Settings(BaseSettings):
     # CORS
     CORS_ORIGINS: list[str] = ["http://localhost:3000"]
 
-    class Config:
-        env_file = ".env"
+    if _HAS_PYDANTIC_SETTINGS:
+        class Config:
+            env_file = ".env"
+    else:
+        def __init__(self) -> None:
+            for key, default in self.__class__.__dict__.items():
+                if not key.isupper():
+                    continue
+                env_val = os.getenv(key)
+                if env_val is None:
+                    value = default
+                else:
+                    if isinstance(default, bool):
+                        value = env_val.lower() in {"1", "true", "yes", "on"}
+                    elif isinstance(default, int):
+                        value = int(env_val)
+                    elif isinstance(default, float):
+                        value = float(env_val)
+                    elif isinstance(default, list):
+                        value = [item.strip() for item in env_val.split(",") if item.strip()]
+                    else:
+                        value = env_val
+                setattr(self, key, value)
 
 
 @lru_cache()

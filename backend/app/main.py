@@ -15,9 +15,12 @@ logger = setup_logging()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Starting TradeOptimize AI Backend...")
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    logger.info("Database tables created")
+    if engine is not None:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        logger.info("Database tables created")
+    else:
+        logger.warning("Database engine unavailable; skipping migrations")
     yield
     logger.info("Shutting down...")
 

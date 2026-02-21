@@ -1,0 +1,3 @@
+DEFAULT_CURRENCY = "USD"
+SUPPORTED_SHIPPING_MODES = ["ocean", "air", "land"]
+RISK_LEVELS = ["LOW", "MEDIUM", "HIGH"]
