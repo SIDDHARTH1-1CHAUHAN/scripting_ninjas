@@ -1,6 +1,48 @@
-version: '3.8'
-
 services:
+  backend:
+    build:
+      context: .
+    container_name: tradeopt-backend
+    environment:
+      DEBUG: "true"
+      POSTGRES_URL: postgresql+asyncpg://tradeopt:tradeopt123@postgres:5432/tradeoptimize
+      MONGO_URL: mongodb://mongodb:27017
+      REDIS_URL: redis://redis:6379
+      CORS_ORIGINS: '["http://localhost:3000"]'
+      HS_CLASSIFIER_URL: http://hs-classifier:8001
+      ROUTE_OPTIMIZER_URL: http://route-optimizer:8002
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+      - mongodb
+      - redis
+    restart: unless-stopped
+
+  hs-classifier:
+    build:
+      context: ./microservices/hs_classifier
+    container_name: tradeopt-hs-classifier
+    environment:
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "8001:8001"
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  route-optimizer:
+    build:
+      context: ./microservices/route_optimizer
+    container_name: tradeopt-route-optimizer
+    environment:
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "8002:8002"
+    depends_on:
+      - redis
+    restart: unless-stopped
+
   postgres:
     image: postgres:15
     environment:

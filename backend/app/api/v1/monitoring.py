@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 import httpx
 from datetime import datetime
+import os
 
 try:
     import psutil
@@ -12,10 +13,13 @@ router = APIRouter(prefix="/monitoring", tags=["Monitoring"])
 
 @router.get("/health/detailed")
 async def detailed_health():
+    hs_classifier_url = os.getenv("HS_CLASSIFIER_URL", "http://localhost:8001")
+    route_optimizer_url = os.getenv("ROUTE_OPTIMIZER_URL", "http://localhost:8002")
+
     services = {
         "main_backend": True,
-        "hs_classifier": await check_service("http://localhost:8001/health"),
-        "route_optimizer": await check_service("http://localhost:8002/health"),
+        "hs_classifier": await check_service(f"{hs_classifier_url}/health"),
+        "route_optimizer": await check_service(f"{route_optimizer_url}/health"),
     }
 
     if psutil is not None:
