@@ -1,5 +1,6 @@
 'use client'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
+import { ToastContainer } from '@/components/ui/Toast'
 
 export default function DashboardLayout({
   children,
@@ -8,5 +9,10 @@ export default function DashboardLayout({
 }) {
   useKeyboardShortcuts()
 
-  return <>{children}</>
+  return (
+    <>
+      {children}
+      <ToastContainer />
+    </>
+  )
 }
