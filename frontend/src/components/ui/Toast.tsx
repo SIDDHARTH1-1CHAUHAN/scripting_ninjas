@@ -36,14 +36,17 @@ export function ToastContainer() {
         <div
           key={toast.id}
           onClick={() => remove(toast.id)}
-          className={`px-4 py-3 font-pixel text-sm cursor-pointer animate-slide-in ${
-            toast.type === 'error' ? 'bg-warning text-white' :
-            toast.type === 'success' ? 'bg-dark text-text-inv' :
-            toast.type === 'warning' ? 'bg-yellow-500 text-black' :
-            'bg-canvas border border-dark'
+          className={`min-w-[260px] max-w-[360px] px-4 py-3 text-sm cursor-pointer animate-slide-in border shadow-[var(--surface-shadow)] backdrop-blur-md ${
+            toast.type === 'error' ? 'bg-warning/95 text-white border-warning' :
+            toast.type === 'success' ? 'bg-dark/95 text-text-inv border-dark' :
+            toast.type === 'warning' ? 'bg-yellow-500/95 text-black border-yellow-500' :
+            'bg-panel/95 border-dark'
           }`}
         >
-          {toast.message}
+          <div className="label mb-1">
+            {toast.type.toUpperCase()}
+          </div>
+          <div>{toast.message}</div>
         </div>
       ))}
     </div>

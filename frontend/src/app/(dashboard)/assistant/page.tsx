@@ -5,30 +5,36 @@ import { ChatContainer } from '@/components/features/assistant/ChatContainer'
 
 export default function AssistantPage() {
   const rightPanelContent = (
-    <div className="space-y-6">
-      <div>
-        <div className="label text-[#888] mb-2">CAPABILITIES</div>
-        <ul className="text-sm space-y-2">
-          <li>• HS Code Classification</li>
-          <li>• Tariff Rate Lookup</li>
-          <li>• Trade Compliance Check</li>
-          <li>• Document Requirements</li>
-          <li>• Route Optimization</li>
+    <div className="space-y-5 text-sm">
+      <section className="border border-dark/55 bg-canvas/5 p-4 space-y-3">
+        <div className="label">CAPABILITIES</div>
+        <ul className="space-y-2 text-text-inv/90">
+          <li>• HS code classification</li>
+          <li>• Duty and tariff estimation</li>
+          <li>• Compliance checklist guidance</li>
+          <li>• Document requirement planning</li>
+          <li>• Route and shipment decision support</li>
         </ul>
-      </div>
-      <div>
-        <div className="label text-[#888] mb-2">KEYBOARD_SHORTCUTS</div>
-        <div className="text-sm space-y-1">
-          <div><kbd className="font-pixel text-xs">Ctrl+K</kbd> Open Assistant</div>
-          <div><kbd className="font-pixel text-xs">Ctrl+Shift+C</kbd> Classify</div>
-          <div><kbd className="font-pixel text-xs">Ctrl+Shift+L</kbd> Landed Cost</div>
+      </section>
+      <section className="border border-dark/55 bg-canvas/5 p-4 space-y-3">
+        <div className="label">KEYBOARD SHORTCUTS</div>
+        <div className="space-y-2 text-text-inv/90">
+          <div><kbd className="font-pixel text-xs border border-dark/50 px-1.5 py-0.5">Ctrl+K</kbd> Open assistant</div>
+          <div><kbd className="font-pixel text-xs border border-dark/50 px-1.5 py-0.5">Ctrl+Shift+C</kbd> Open classify</div>
+          <div><kbd className="font-pixel text-xs border border-dark/50 px-1.5 py-0.5">Ctrl+Shift+L</kbd> Open landed cost</div>
         </div>
-      </div>
-      <div>
-        <div className="label text-[#888] mb-2">AI_MODEL</div>
-        <div className="font-pixel text-sm">GROQ_LLAMA_3.1_70B</div>
-        <div className="text-xs text-[#666] mt-1">800 tokens/sec</div>
-      </div>
+      </section>
+      <section className="border border-dark/55 bg-canvas/5 p-4 space-y-2">
+        <div className="label">AI ENGINE</div>
+        <div className="font-pixel text-sm">GROQ + FALLBACK</div>
+        <div className="text-xs text-text-inv/70">Current provider/model is shown live above the chat.</div>
+      </section>
+      <section className="border border-dark/55 bg-canvas/5 p-4 space-y-2">
+        <div className="label">BEST INPUT FORMAT</div>
+        <div className="text-xs text-text-inv/80 leading-relaxed">
+          Include product name, material, use-case, origin country, and shipment value for more actionable output.
+        </div>
+      </section>
     </div>
   )
 
@@ -38,7 +44,7 @@ export default function AssistantPage() {
         title="AI"
         pixelTitle="ASSISTANT"
         metaLabel="MODEL"
-        metaValue="LLAMA_3.1"
+        metaValue="DYNAMIC"
       />
       <ChatContainer />
     </AppLayout>

@@ -7,6 +7,7 @@ import { CostBreakdown } from '@/components/features/landed-cost/CostBreakdown'
 import { CostPanel } from '@/components/features/landed-cost/CostPanel'
 import { CardSkeleton } from '@/components/ui/Skeleton'
 import { useToast } from '@/components/ui/Toast'
+import { useLandedCost } from '@/hooks'
 
 interface CostData {
   productValue: number
@@ -27,7 +28,9 @@ export default function LandedCostPage() {
   const [loading, setLoading] = useState(false)
   const [costData, setCostData] = useState<CostData | null>(null)
   const [currentHsCode, setCurrentHsCode] = useState<string>('')
+  const [warnings, setWarnings] = useState<string[]>([])
   const { add } = useToast()
+  const landedCostMutation = useLandedCost()
 
   const handleCalculate = async (formData: {
     hsCode: string
@@ -42,68 +45,44 @@ export default function LandedCostPage() {
     setCurrentHsCode(formData.hsCode)
 
     try {
-      // TODO: Replace with actual API call when backend is ready
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/landed-cost/calculate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+      const totalProductValue = formData.productValue * formData.quantity
+      const response = await landedCostMutation.mutateAsync({
+        hs_code: formData.hsCode,
+        product_value: totalProductValue,
+        quantity: formData.quantity,
+        origin_country: formData.originCountry,
+        destination_country: formData.destinationCountry,
+        shipping_mode: formData.shippingMode,
+        incoterm: formData.incoterm,
       })
 
-      if (!response.ok) {
-        throw new Error('Failed to calculate landed cost')
-      }
-
-      const data = await response.json()
-      setCostData(data)
+      setCostData({
+        productValue: response.breakdown.product_value,
+        baseDuty: response.breakdown.base_duty,
+        section301: response.breakdown.section_301,
+        mpf: response.breakdown.mpf,
+        hmf: response.breakdown.hmf,
+        freight: response.breakdown.freight,
+        insurance: response.breakdown.insurance,
+        totalLanded: response.total_landed_cost,
+        perUnit: response.cost_per_unit,
+        baseDutyRate: (response.breakdown.base_duty_rate || 0) * 100,
+        section301Rate: (response.breakdown.section_301_rate || 0) * 100,
+      })
+      setWarnings(response.warnings)
       add('success', 'Calculation complete!')
     } catch (error) {
-      // Use mock data for now if API fails
-      console.error('API error, using mock data:', error)
-
-      const mockData: CostData = {
-        productValue: formData.productValue * formData.quantity,
-        baseDuty: formData.productValue * formData.quantity * 0.025, // 2.5% base duty
-        section301: formData.originCountry === 'CN' ? formData.productValue * formData.quantity * 0.25 : 0, // 25% if from China
-        mpf: Math.min(Math.max(formData.productValue * 0.003464, 27.23), 528.33), // MPF calculation
-        hmf: formData.shippingMode === 'ocean' ? 0.125 : 0, // HMF only for ocean
-        freight: formData.shippingMode === 'air' ? formData.productValue * 0.15 : formData.productValue * 0.05,
-        insurance: formData.productValue * formData.quantity * 0.01,
-        totalLanded: 0,
-        perUnit: 0,
-        baseDutyRate: 2.5,
-        section301Rate: formData.originCountry === 'CN' ? 25 : 0,
-        hsCodeDescription: 'Static converters (for example, rectifiers)',
-      }
-
-      mockData.totalLanded =
-        mockData.productValue +
-        mockData.baseDuty +
-        mockData.section301 +
-        mockData.mpf +
-        mockData.hmf +
-        mockData.freight +
-        mockData.insurance
-
-      mockData.perUnit = mockData.totalLanded / formData.quantity
-
-      setCostData(mockData)
-      add('warning', 'Using mock data - Backend not connected')
+      const message = error instanceof Error ? error.message : 'Calculation failed'
+      add('error', message)
+      setCostData(null)
+      setWarnings([])
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <AppLayout
-      rightPanel={
-        <CostPanel
-          hsCode={currentHsCode || undefined}
-          baseDutyRate={costData?.baseDutyRate}
-          section301Rate={costData?.section301Rate}
-          description={costData?.hsCodeDescription}
-        />
-      }
-    >
+    <AppLayout>
       <WorkspaceHeader
         title="LANDED"
         pixelTitle="COST"
@@ -111,9 +90,27 @@ export default function LandedCostPage() {
         metaValue="ACTIVE"
       />
 
-      <div className="flex-1 overflow-y-auto p-6 space-y-6">
-        <div className="border border-dark p-6">
-          <CostCalculatorForm onSubmit={handleCalculate} />
+      <div className="dashboard-scroll flex-1 overflow-y-auto p-6 space-y-6">
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="border border-dark p-6 space-y-5">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <div className="label mb-1">CALCULATOR</div>
+                <p className="text-xs opacity-70">
+                  Estimate landed cost using live tariff and lane-aware freight logic.
+                </p>
+              </div>
+            </div>
+            <CostCalculatorForm onSubmit={handleCalculate} />
+          </div>
+          <div className="border border-dark p-4 bg-canvas/30 h-fit">
+            <CostPanel
+              hsCode={currentHsCode || undefined}
+              baseDutyRate={costData?.baseDutyRate}
+              section301Rate={costData?.section301Rate}
+              description={costData?.hsCodeDescription}
+            />
+          </div>
         </div>
 
         {loading && (
@@ -121,7 +118,19 @@ export default function LandedCostPage() {
         )}
 
         {!loading && costData && (
-          <CostBreakdown data={costData} />
+          <div className="space-y-4">
+            <CostBreakdown data={costData} />
+            {warnings.length > 0 && (
+              <div className="border border-warning p-4">
+                <div className="label mb-2 text-warning">WARNINGS</div>
+                <ul className="space-y-1 text-sm">
+                  {warnings.map((warning) => (
+                    <li key={warning}>- {warning}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
         )}
 
         {!loading && !costData && (

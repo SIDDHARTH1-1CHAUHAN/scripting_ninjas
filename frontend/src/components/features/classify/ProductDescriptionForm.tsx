@@ -1,30 +1,30 @@
 'use client'
-import { useState } from 'react'
 import { Textarea } from '@/components/ui/Textarea'
 
 interface Props {
+  value: string
   onSubmit: (desc: string) => void
 }
 
-export function ProductDescriptionForm({ onSubmit }: Props) {
-  const [description, setDescription] = useState('')
+export function ProductDescriptionForm({ value, onSubmit }: Props) {
+  const description = value
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setDescription(e.target.value)
     onSubmit(e.target.value)
   }
 
   return (
     <div className="space-y-4">
-      <div className="label">PRODUCT DESCRIPTION</div>
+      <div className="label">Product Description</div>
       <Textarea
         value={description}
         onChange={handleChange}
         placeholder="Describe your product in detail. Include materials, function, intended use..."
-        className="h-40"
+        className="classify-soft-input h-44 rounded-2xl leading-relaxed"
       />
-      <div className="text-xs opacity-60">
-        TIP: Include technical specifications, materials, and primary function for better classification.
+      <div className="flex items-center justify-between text-xs text-text-muted">
+        Tip: Include technical specs, materials, and primary function for better accuracy.
+        <span>{description.length} chars</span>
       </div>
     </div>
   )

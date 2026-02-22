@@ -1,14 +1,16 @@
 import { useMutation } from '@tanstack/react-query'
-import { sendChatMessage } from '@/lib/api'
-
-interface ChatContext {
-  role: string
-  content: string
-}
+import { sendChatMessage, type ChatContext, type AssistantUserProfile } from '@/lib/api'
 
 export function useChat() {
   return useMutation({
-    mutationFn: ({ message, context }: { message: string; context?: ChatContext[] }) =>
-      sendChatMessage(message, context),
+    mutationFn: ({
+      message,
+      context,
+      userProfile,
+    }: {
+      message: string
+      context?: ChatContext[]
+      userProfile?: AssistantUserProfile
+    }) => sendChatMessage(message, context, userProfile),
   })
 }

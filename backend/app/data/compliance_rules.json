@@ -1,0 +1,92 @@
+{
+  "base_required_documents": [
+    {"name": "Commercial Invoice", "status": "required"},
+    {"name": "Bill of Lading", "status": "required"},
+    {"name": "Packing List", "status": "required"},
+    {"name": "Certificate of Origin", "status": "recommended"}
+  ],
+  "special_requirements": {
+    "8504": ["UN38.3 Test Summary", "MSDS", "Battery Declaration"],
+    "8506": ["UN38.3 Test Summary", "MSDS"],
+    "8471": ["FCC Declaration"],
+    "2825": ["EPA Certificate"]
+  },
+  "section_301_rates_by_hs4": {
+    "8471": 0.25,
+    "8473": 0.25,
+    "8517": 0.25,
+    "8541": 0.25,
+    "8542": 0.25,
+    "8504": 0.25,
+    "9503": 0.25,
+    "9506": 0.25,
+    "8518": 0.25,
+    "6110": 0.075,
+    "6109": 0.075,
+    "6104": 0.075
+  },
+  "country_route_rules": {
+    "blocked_pairs": [
+      {
+        "origin": "IR",
+        "destination": "US",
+        "score_penalty": 85,
+        "reason": "US comprehensive Iran sanctions make this lane effectively prohibited in most commercial cases",
+        "action_required": "Stop shipment and seek legal counsel before any transaction",
+        "source": "OFAC Iran Sanctions Program"
+      },
+      {
+        "origin": "KP",
+        "destination": "US",
+        "score_penalty": 95,
+        "reason": "US sanctions and embargo controls make North Korea origin trade with US nearly impossible",
+        "action_required": "Do not proceed without explicit US government authorization",
+        "source": "OFAC North Korea Sanctions Program"
+      },
+      {
+        "origin": "SY",
+        "destination": "US",
+        "score_penalty": 90,
+        "reason": "Syria sanctions and export controls make this lane severely restricted",
+        "action_required": "Stop shipment and escalate for legal review",
+        "source": "OFAC Syria Sanctions Program"
+      }
+    ],
+    "high_risk_pairs": [
+      {
+        "origin": "RU",
+        "destination": "US",
+        "score_penalty": 45,
+        "reason": "US-Russia lane faces extensive sanctions, licensing, and banking restrictions",
+        "action_required": "Run enhanced screening, licensing, and payment-path checks",
+        "source": "OFAC and BIS Russia controls"
+      },
+      {
+        "origin": "BY",
+        "destination": "US",
+        "score_penalty": 40,
+        "reason": "Belarus-origin trade to US has elevated sanctions and export control scrutiny",
+        "action_required": "Perform enhanced denied-party and end-use screening",
+        "source": "OFAC Belarus-related sanctions"
+      }
+    ],
+    "watchlist_countries": {
+      "AF": "medium",
+      "BY": "high",
+      "CU": "medium",
+      "IQ": "medium",
+      "IR": "high",
+      "KP": "high",
+      "MM": "medium",
+      "RU": "high",
+      "SD": "medium",
+      "SY": "high",
+      "VE": "medium",
+      "YE": "medium"
+    },
+    "watchlist_penalties": {
+      "high": 25,
+      "medium": 12
+    }
+  }
+}

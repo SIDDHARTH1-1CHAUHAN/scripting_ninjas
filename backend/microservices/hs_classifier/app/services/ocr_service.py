@@ -1,24 +1,15 @@
 import logging
-from io import BytesIO
-
-import pytesseract
-from PIL import Image
 
 logger = logging.getLogger(__name__)
 
 
 class OCRService:
-    """Extract text from images using Tesseract (100% FREE)"""
+    """Deprecated OCR service retained for backward compatibility."""
 
     async def extract_text(self, image_bytes: bytes) -> str:
-        """Extract text from image bytes"""
-        try:
-            image = Image.open(BytesIO(image_bytes))
-            text = pytesseract.image_to_string(image)
-            return text.strip()
-        except Exception as e:
-            logger.error(f"OCR failed: {e}")
-            return ""
+        """Gemini-first flow no longer uses OCR extraction."""
+        logger.info("OCR service is deprecated; returning empty text")
+        return ""
 
     async def extract_from_document(self, document_bytes: bytes) -> dict:
         """Extract structured data from document image"""

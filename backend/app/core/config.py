@@ -25,10 +25,18 @@ class Settings(BaseSettings):
     # AI (FREE)
     GROQ_API_KEY: str = ""
     OLLAMA_URL: str = "http://localhost:11434"
+    MEGALLM_API_KEY: str = ""
+    MEGALLM_BASE_URL: str = "https://ai.megallm.io/v1"
+    MEGALLM_MODEL: str = "gpt-4"
+    GOOGLE_CLIENT_ID: str = ""
+    JWT_SECRET: str = "change-me-in-production"
+    JWT_ALGORITHM: str = "HS256"
+    JWT_EXPIRE_MINUTES: int = 1440
 
     # External APIs
     USITC_API_URL: str = "https://hts.usitc.gov/api"
     EXCHANGE_RATE_API_URL: str = "https://api.exchangerate-api.com/v4/latest/USD"
+    ALPHA_VANTAGE_API_KEY: str = ""
 
     # CORS
     CORS_ORIGINS: list[str] = ["http://localhost:3000"]

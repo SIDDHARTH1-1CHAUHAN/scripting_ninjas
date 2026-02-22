@@ -4,6 +4,7 @@ imp_references_file
 .env
 **/.env
 .env.local
+.env.*
 .env.*.local
 !*.env.example
 !**/.env.example
@@ -12,3 +13,10 @@ imp_references_file
 __pycache__/
 **/__pycache__/
 *.pyc
+
+# Local planning artifact
+plan.md
+plan*.md
+*plan*.md
+planmoney.md
+plan.phase1.md

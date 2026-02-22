@@ -7,7 +7,7 @@ export function Input({ label, className = '', ...props }: InputProps) {
     <div>
       {label && <div className="label mb-1">{label}</div>}
       <input
-        className={`w-full bg-transparent border border-dark p-3 focus:outline-none focus:border-2 ${className}`}
+        className={`w-full bg-transparent border border-dark p-3 focus:outline-none focus:border-2 rounded-sm shadow-[var(--surface-shadow)] ${className}`}
         {...props}
       />
     </div>
