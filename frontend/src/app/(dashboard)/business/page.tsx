@@ -9,7 +9,7 @@ import { generateBusinessPitch, getBusinessModel } from '@/lib/api'
 
 export default function BusinessPage() {
   const [prompt, setPrompt] = useState(
-    'Create a concise SaaS sales pitch for TradeOptimize AI targeting SMB importers in the US.',
+    'Create a crisp 90-second hackathon pitch for TradeOptimize AI focused on ROI for import teams.',
   )
   const [monthlyImportValue, setMonthlyImportValue] = useState(250000)
   const [averageDutyRate, setAverageDutyRate] = useState(10)
@@ -29,6 +29,7 @@ export default function BusinessPage() {
   const membership = modelQuery.data?.membership_addon
   const revenueScenarios = useMemo(() => modelQuery.data?.revenue_scenarios ?? [], [modelQuery.data?.revenue_scenarios])
   const usps = useMemo(() => modelQuery.data?.usp ?? [], [modelQuery.data?.usp])
+  const hackathonPitch = modelQuery.data?.hackathon_pitch
   const roiMonthlySavings = useMemo(() => {
     const monthlyDuties = monthlyImportValue * (averageDutyRate / 100)
     return monthlyDuties * (optimizationRate / 100)
@@ -100,6 +101,63 @@ export default function BusinessPage() {
               <div className="text-lg font-semibold">{modelQuery.data.product}</div>
               <div className="text-sm mt-1">{modelQuery.data.positioning}</div>
             </section>
+
+            {hackathonPitch && (
+              <section className="border border-dark p-4 bg-canvas/40">
+                <div className="label mb-2">HACKATHON PITCH</div>
+                <div className="text-base font-semibold">{hackathonPitch.one_liner}</div>
+
+                <div className="mt-4 grid md:grid-cols-2 gap-4 text-sm">
+                  <div className="border border-dark p-3">
+                    <div className="label mb-2">PROBLEM</div>
+                    <ul className="space-y-2">
+                      {hackathonPitch.problem.map((item) => (
+                        <li key={item}>• {item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="border border-dark p-3">
+                    <div className="label mb-2">SOLUTION</div>
+                    <ul className="space-y-2">
+                      {hackathonPitch.solution.map((item) => (
+                        <li key={item}>• {item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="border border-dark p-3">
+                    <div className="label mb-2">DEMO STORY</div>
+                    <ul className="space-y-2">
+                      {hackathonPitch.demo_story.map((item) => (
+                        <li key={item}>• {item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="border border-dark p-3">
+                    <div className="label mb-2">WHY WE WIN</div>
+                    <ul className="space-y-2">
+                      {hackathonPitch.why_we_win.map((item) => (
+                        <li key={item}>• {item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="mt-4 grid md:grid-cols-2 gap-4 text-sm">
+                  <div className="border border-dark p-3">
+                    <div className="label mb-2">BUSINESS MODEL SUMMARY</div>
+                    <ul className="space-y-2">
+                      {hackathonPitch.business_model_summary.map((item) => (
+                        <li key={item}>• {item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="border border-dark p-3 bg-dark text-text-inv">
+                    <div className="label text-[#a7a7a7] mb-2">HACKATHON ASK</div>
+                    <div>{hackathonPitch.ask}</div>
+                  </div>
+                </div>
+              </section>
+            )}
 
             <section className="grid md:grid-cols-2 gap-4">
               <div className="border border-dark p-4">
