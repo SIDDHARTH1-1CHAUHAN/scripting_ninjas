@@ -1,30 +1,26 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import dynamic from 'next/dynamic'
 
 const MapContainer = dynamic(
   () => import('react-leaflet').then((mod) => mod.MapContainer),
-  { ssr: false }
+  { ssr: false },
 )
 const TileLayer = dynamic(
   () => import('react-leaflet').then((mod) => mod.TileLayer),
-  { ssr: false }
-)
-const Marker = dynamic(
-  () => import('react-leaflet').then((mod) => mod.Marker),
-  { ssr: false }
+  { ssr: false },
 )
 const Popup = dynamic(
   () => import('react-leaflet').then((mod) => mod.Popup),
-  { ssr: false }
+  { ssr: false },
 )
 const Polyline = dynamic(
   () => import('react-leaflet').then((mod) => mod.Polyline),
-  { ssr: false }
+  { ssr: false },
 )
 const CircleMarker = dynamic(
   () => import('react-leaflet').then((mod) => mod.CircleMarker),
-  { ssr: false }
+  { ssr: false },
 )
 
 interface Port {
@@ -32,7 +28,6 @@ interface Port {
   name: string
   lat: number
   lon: number
-  congestion?: 'LOW' | 'MEDIUM' | 'HIGH'
 }
 
 interface Route {
@@ -50,104 +45,213 @@ interface RouteMapProps {
   selectedRouteId?: string
 }
 
-const MAJOR_PORTS: Port[] = [
-  { code: 'CNSZX', name: 'Yantian, Shenzhen', lat: 22.5431, lon: 114.0579, congestion: 'MEDIUM' },
-  { code: 'CNSHA', name: 'Shanghai', lat: 31.2304, lon: 121.4737, congestion: 'HIGH' },
-  { code: 'HKHKG', name: 'Hong Kong', lat: 22.3193, lon: 114.1694, congestion: 'MEDIUM' },
-  { code: 'USLAX', name: 'Los Angeles', lat: 33.7701, lon: -118.1937, congestion: 'HIGH' },
-  { code: 'USLGB', name: 'Long Beach', lat: 33.7544, lon: -118.2166, congestion: 'MEDIUM' },
-  { code: 'NLRTM', name: 'Rotterdam', lat: 51.9244, lon: 4.4777, congestion: 'LOW' },
-  { code: 'SGSIN', name: 'Singapore', lat: 1.2644, lon: 103.8222, congestion: 'LOW' },
-]
+function buildBounds(points: Array<{ lat: number; lon: number }>): [[number, number], [number, number]] {
+  if (points.length === 0) {
+    return [[-15, -15], [15, 15]]
+  }
+
+  let minLat = points[0].lat
+  let maxLat = points[0].lat
+  let minLon = points[0].lon
+  let maxLon = points[0].lon
+
+  points.forEach((point) => {
+    minLat = Math.min(minLat, point.lat)
+    maxLat = Math.max(maxLat, point.lat)
+    minLon = Math.min(minLon, point.lon)
+    maxLon = Math.max(maxLon, point.lon)
+  })
+
+  if (minLat === maxLat) {
+    minLat -= 0.9
+    maxLat += 0.9
+  }
+  if (minLon === maxLon) {
+    minLon -= 0.9
+    maxLon += 0.9
+  }
+
+  return [[minLat, minLon], [maxLat, maxLon]]
+}
 
 export function RouteMap({ origin, destination, routes, selectedRouteId }: RouteMapProps) {
   const [isMounted, setIsMounted] = useState(false)
+  const [theme, setTheme] = useState<'light' | 'dark'>('dark')
+  const [mapRef, setMapRef] = useState<{
+    fitBounds: (bounds: [[number, number], [number, number]], options?: { padding?: [number, number]; animate?: boolean }) => void
+    invalidateSize: (animate?: boolean) => void
+  } | null>(null)
 
   useEffect(() => {
     setIsMounted(true)
   }, [])
 
+  useEffect(() => {
+    if (!isMounted) return
+
+    const syncTheme = () => {
+      const themeValue = document.documentElement.getAttribute('data-theme')
+      setTheme(themeValue === 'light' ? 'light' : 'dark')
+    }
+
+    syncTheme()
+    const observer = new MutationObserver(syncTheme)
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
+    return () => observer.disconnect()
+  }, [isMounted])
+
+  const activeRoute = useMemo(
+    () => routes.find((route) => route.id === selectedRouteId)
+      || routes.find((route) => route.recommended)
+      || routes[0],
+    [routes, selectedRouteId],
+  )
+
+  const focusWaypoints = useMemo(
+    () => (activeRoute?.waypoints?.length
+      ? activeRoute.waypoints
+      : [
+          { lat: origin.lat, lon: origin.lon, name: origin.name },
+          { lat: destination.lat, lon: destination.lon, name: destination.name },
+        ]),
+    [activeRoute, destination.lat, destination.lon, destination.name, origin.lat, origin.lon, origin.name],
+  )
+
+  const bounds = useMemo(
+    () => buildBounds(focusWaypoints),
+    [focusWaypoints],
+  )
+
+  const mapThemeConfig = theme === 'light'
+    ? {
+        tileUrl: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+        activeStroke: '#111827',
+        waypoint: '#64748b',
+      }
+    : {
+        tileUrl: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+        activeStroke: '#ffffff',
+        waypoint: '#94a3b8',
+      }
+
+  useEffect(() => {
+    if (!mapRef) return
+
+    mapRef.fitBounds(bounds, { padding: [24, 24], animate: false })
+    requestAnimationFrame(() => mapRef.invalidateSize(false))
+  }, [bounds, mapRef])
+
   if (!isMounted) {
     return (
       <div className="h-full w-full bg-panel flex items-center justify-center">
-        <div className="font-pixel text-sm animate-pulse">LOADING_MAP...</div>
+        <div className="font-pixel text-sm animate-pulse">LOADING_ROUTE_GRAPH...</div>
       </div>
     )
   }
 
-  const centerLat = (origin.lat + destination.lat) / 2
-  const centerLon = (origin.lon + destination.lon) / 2
-
-  const getCongestionColor = (congestion?: string) => {
-    switch (congestion) {
-      case 'HIGH':
-        return '#FF4141'
-      case 'MEDIUM':
-        return '#FFB800'
-      case 'LOW':
-        return '#00C853'
-      default:
-        return '#888888'
-    }
-  }
-
   return (
-    <MapContainer center={[centerLat, centerLon]} zoom={2} style={{ height: '100%', width: '100%' }} scrollWheelZoom>
+    <MapContainer
+      ref={setMapRef}
+      bounds={bounds}
+      boundsOptions={{ padding: [24, 24] }}
+      style={{ height: '100%', width: '100%' }}
+      scrollWheelZoom
+      preferCanvas
+      zoomAnimation={false}
+      markerZoomAnimation={false}
+      fadeAnimation={false}
+    >
       <TileLayer
         attribution='&copy; <a href="https://carto.com/">CARTO</a>'
-        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+        url={mapThemeConfig.tileUrl}
       />
 
-      {routes.map((route) => (
-        <Polyline
-          key={route.id}
-          positions={route.waypoints.map((w) => [w.lat, w.lon] as [number, number])}
-          pathOptions={{
-            color: selectedRouteId === route.id ? '#FFFFFF' : route.color,
-            weight: selectedRouteId === route.id ? 4 : 2,
-            opacity: selectedRouteId === route.id ? 1 : 0.5,
-            dashArray: route.recommended ? undefined : '5, 10',
-          }}
-        />
-      ))}
+      {routes
+        .filter((route) => !activeRoute || route.id !== activeRoute.id)
+        .map((route) => (
+          <Polyline
+            key={route.id}
+            positions={route.waypoints.map((waypoint) => [waypoint.lat, waypoint.lon] as [number, number])}
+            pathOptions={{
+              color: route.color,
+              weight: 2,
+              opacity: 0.35,
+              dashArray: '6, 8',
+            }}
+          />
+        ))}
 
-      {MAJOR_PORTS.map((port) => (
+      {activeRoute && (
+        <>
+          <Polyline
+            positions={activeRoute.waypoints.map((waypoint) => [waypoint.lat, waypoint.lon] as [number, number])}
+            pathOptions={{
+              color: mapThemeConfig.activeStroke,
+              weight: 5,
+              opacity: 0.95,
+            }}
+          />
+          <Polyline
+            positions={activeRoute.waypoints.map((waypoint) => [waypoint.lat, waypoint.lon] as [number, number])}
+            pathOptions={{
+              color: activeRoute.color,
+              weight: 3,
+              opacity: 0.85,
+            }}
+          />
+        </>
+      )}
+
+      {activeRoute?.waypoints.slice(1, -1).map((waypoint, index) => (
         <CircleMarker
-          key={port.code}
-          center={[port.lat, port.lon]}
-          radius={8}
+          key={`${waypoint.name}-${index}`}
+          center={[waypoint.lat, waypoint.lon]}
+          radius={5}
           pathOptions={{
-            color: getCongestionColor(port.congestion),
-            fillColor: getCongestionColor(port.congestion),
+            color: mapThemeConfig.waypoint,
+            fillColor: mapThemeConfig.waypoint,
             fillOpacity: 0.8,
           }}
         >
           <Popup>
-            <div className="font-pixel text-xs">
-              <div>{port.name}</div>
-              <div className="text-[10px]">Congestion: <span style={{ color: getCongestionColor(port.congestion) }}>{port.congestion}</span></div>
-            </div>
+            <div className="text-xs font-pixel">{waypoint.name}</div>
           </Popup>
         </CircleMarker>
       ))}
 
-      <Marker position={[origin.lat, origin.lon]}>
+      <CircleMarker
+        center={[origin.lat, origin.lon]}
+        radius={8}
+        pathOptions={{
+          color: '#00C853',
+          fillColor: '#00C853',
+          fillOpacity: 0.9,
+        }}
+      >
         <Popup>
           <div className="font-pixel text-xs">
-            <div className="text-green-500">ORIGIN</div>
+            <div>ORIGIN</div>
             <div>{origin.name}</div>
           </div>
         </Popup>
-      </Marker>
+      </CircleMarker>
 
-      <Marker position={[destination.lat, destination.lon]}>
+      <CircleMarker
+        center={[destination.lat, destination.lon]}
+        radius={8}
+        pathOptions={{
+          color: '#60A5FA',
+          fillColor: '#60A5FA',
+          fillOpacity: 0.9,
+        }}
+      >
         <Popup>
           <div className="font-pixel text-xs">
-            <div className="text-blue-500">DESTINATION</div>
+            <div>DESTINATION</div>
             <div>{destination.name}</div>
           </div>
         </Popup>
-      </Marker>
+      </CircleMarker>
     </MapContainer>
   )
 }

@@ -5,7 +5,14 @@ import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
 import html2canvas from 'html2canvas'
 
-export function ExportButtons({ data, chartRef }: { data: any[]; chartRef?: React.RefObject<HTMLDivElement> }) {
+interface ExportRow {
+  hsCode: string
+  count: number
+  confidence: number
+  savings: number
+}
+
+export function ExportButtons({ data, chartRef }: { data: ExportRow[]; chartRef?: React.RefObject<HTMLDivElement> }) {
   const exportPDF = async () => {
     const pdf = new jsPDF()
 
@@ -47,14 +54,23 @@ export function ExportButtons({ data, chartRef }: { data: any[]; chartRef?: Reac
 
   return (
     <div className="flex gap-2">
-      <button onClick={exportPDF} className="border border-dark px-3 py-2 text-xs font-pixel hover:bg-dark hover:text-canvas">
-        📄 PDF
+      <button
+        onClick={exportPDF}
+        className="border border-dark px-3 py-2 text-xs font-pixel hover:bg-dark hover:text-canvas bg-panel/60 shadow-[var(--surface-shadow)]"
+      >
+        EXPORT_PDF
       </button>
-      <button onClick={exportExcel} className="border border-dark px-3 py-2 text-xs font-pixel hover:bg-dark hover:text-canvas">
-        📊 EXCEL
+      <button
+        onClick={exportExcel}
+        className="border border-dark px-3 py-2 text-xs font-pixel hover:bg-dark hover:text-canvas bg-panel/60 shadow-[var(--surface-shadow)]"
+      >
+        EXPORT_XLSX
       </button>
-      <button onClick={exportCSV} className="border border-dark px-3 py-2 text-xs font-pixel hover:bg-dark hover:text-canvas">
-        📋 CSV
+      <button
+        onClick={exportCSV}
+        className="border border-dark px-3 py-2 text-xs font-pixel hover:bg-dark hover:text-canvas bg-panel/60 shadow-[var(--surface-shadow)]"
+      >
+        EXPORT_CSV
       </button>
     </div>
   )

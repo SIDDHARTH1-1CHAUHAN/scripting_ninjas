@@ -1,6 +1,9 @@
 from pydantic import BaseModel
 from typing import Optional
 
+from .compliance_document_service import compliance_document_service
+from .live_data_service import live_data_service
+
 
 class ComplianceRequest(BaseModel):
     hs_code: str
@@ -8,6 +11,7 @@ class ComplianceRequest(BaseModel):
     destination_country: str
     supplier_name: Optional[str] = None
     product_description: Optional[str] = None
+    compliance_case_id: Optional[str] = None
 
 
 class ComplianceResult(BaseModel):
@@ -16,25 +20,11 @@ class ComplianceResult(BaseModel):
     checks: list[dict]
     required_documents: list[dict]
     warnings: list[str]
+    compliance_case_id: Optional[str] = None
 
 
 class ComplianceService:
     """Trade compliance checking service"""
-
-    # OFAC SDN list (sample - use real API in production)
-    SAMPLE_SDN_ENTITIES = [
-        "IRAN SHIPPING LINES",
-        "NORTH KOREA TRADING CO",
-        "BLOCKED ENTITY LLC",
-    ]
-
-    # HS codes requiring special documentation
-    SPECIAL_REQUIREMENTS = {
-        "8504": ["UN38.3 Test Summary", "MSDS", "Battery Declaration"],
-        "8506": ["UN38.3 Test Summary", "MSDS"],
-        "8471": ["FCC Declaration"],
-        "2825": ["EPA Certificate"],
-    }
 
     async def check_compliance(self, request: ComplianceRequest) -> ComplianceResult:
         """Run compliance checks"""
@@ -45,31 +35,61 @@ class ComplianceService:
         # OFAC Screening
         ofac_result = await self._check_ofac(request.supplier_name)
         checks.append(ofac_result)
-        if ofac_result["status"] != "CLEAR":
+        if ofac_result["status"] in {"BLOCKED", "POTENTIAL_MATCH"}:
             risk_score -= 50
 
+        # Geopolitical route risk for origin -> destination lane.
+        route_risk = await live_data_service.get_country_route_risk(
+            request.origin_country, request.destination_country
+        )
+        route_status = route_risk.get("status", "CLEAR")
+        if route_status in {"WARNING", "BLOCKED"}:
+            checks.append(
+                {
+                    "category": "Geopolitical Route Risk",
+                    "status": route_status,
+                    "details": route_risk.get(
+                        "details", "Country-pair route has elevated geopolitical risk"
+                    ),
+                    "action_required": route_risk.get(
+                        "action_required", "Perform enhanced compliance review"
+                    ),
+                    "source": route_risk.get("source", "Country route risk model"),
+                }
+            )
+            risk_score -= max(0, int(route_risk.get("score_penalty", 0)))
+            warnings.append(
+                route_risk.get(
+                    "details",
+                    "Route has elevated geopolitical risk",
+                )
+            )
+
         # Section 301 check
-        if request.origin_country == "CN" and request.destination_country == "US":
+        section_301 = await live_data_service.get_section_301_status(
+            request.hs_code, request.origin_country
+        )
+        if request.destination_country == "US" and section_301.get("applies"):
             checks.append(
                 {
                     "category": "Section 301 Tariffs",
                     "status": "WARNING",
-                    "details": "Product may be subject to additional tariffs",
+                    "details": section_301.get("message", "Additional tariffs may apply"),
                     "action_required": "Verify tariff rate for HS code",
                 }
             )
             risk_score -= 10
-            warnings.append("Section 301 tariffs may apply")
+            warnings.append(section_301.get("message", "Section 301 tariffs may apply"))
 
         # Special documentation requirements
-        hs_prefix = request.hs_code[:4]
-        if hs_prefix in self.SPECIAL_REQUIREMENTS:
+        special_requirements = live_data_service.get_special_requirements(request.hs_code)
+        if special_requirements:
             checks.append(
                 {
                     "category": "Special Documentation",
                     "status": "ACTION_REQUIRED",
-                    "details": f"Additional documents required for HS {hs_prefix}",
-                    "documents": self.SPECIAL_REQUIREMENTS[hs_prefix],
+                    "details": f"Additional documents required for HS {request.hs_code[:4]}",
+                    "documents": special_requirements,
                 }
             )
             risk_score -= 15
@@ -83,17 +103,27 @@ class ComplianceService:
             risk_level = "HIGH"
 
         # Required documents
-        required_docs = [
-            {"name": "Commercial Invoice", "status": "required"},
-            {"name": "Bill of Lading", "status": "required"},
-            {"name": "Packing List", "status": "required"},
-            {"name": "Certificate of Origin", "status": "recommended"},
-        ]
+        required_docs = list(live_data_service.get_base_required_documents())
 
         # Add special requirements
-        if hs_prefix in self.SPECIAL_REQUIREMENTS:
-            for doc in self.SPECIAL_REQUIREMENTS[hs_prefix]:
+        if special_requirements:
+            for doc in special_requirements:
                 required_docs.append({"name": doc, "status": "required"})
+
+        # Persist case and merge uploaded document statuses from storage.
+        compliance_case_id = await compliance_document_service.sync_case_requirements(
+            compliance_case_id=request.compliance_case_id or "",
+            request_payload=request.model_dump(),
+            required_documents=required_docs,
+        )
+        if compliance_case_id:
+            try:
+                required_docs = await compliance_document_service.get_document_statuses(
+                    compliance_case_id
+                )
+            except Exception:
+                # Keep calculation resilient even if storage is temporarily unavailable.
+                pass
 
         return ComplianceResult(
             overall_risk_score=max(0, risk_score),
@@ -101,6 +131,7 @@ class ComplianceService:
             checks=checks,
             required_documents=required_docs,
             warnings=warnings,
+            compliance_case_id=compliance_case_id,
         )
 
     async def _check_ofac(self, entity_name: Optional[str]) -> dict:
@@ -112,21 +143,16 @@ class ComplianceService:
                 "details": "No supplier name provided",
             }
 
-        # Simple check (use real OFAC API in production)
-        entity_upper = entity_name.upper()
-        for sdn in self.SAMPLE_SDN_ENTITIES:
-            if sdn in entity_upper:
-                return {
-                    "category": "OFAC Sanctions",
-                    "status": "BLOCKED",
-                    "details": f"Entity matches SDN list: {sdn}",
-                }
+        result = await live_data_service.screen_ofac(entity_name)
+        status = result.get("status", "CLEAR")
+        mapped_status = "BLOCKED" if status == "POTENTIAL_MATCH" else status
 
         return {
             "category": "OFAC Sanctions",
-            "status": "CLEAR",
-            "details": "No matches found in SDN list",
+            "status": mapped_status,
+            "details": result.get("message", "No matches found in screening"),
             "checked_entities": [entity_name],
+            "source": result.get("source", "Simplified OFAC keyword screening"),
         }
 
 

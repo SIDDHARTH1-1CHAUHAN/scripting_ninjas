@@ -3,6 +3,43 @@ import { useState } from 'react'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 
+const MAJOR_COUNTRIES = [
+  { code: 'US', name: 'United States' },
+  { code: 'CN', name: 'China' },
+  { code: 'IN', name: 'India' },
+  { code: 'JP', name: 'Japan' },
+  { code: 'DE', name: 'Germany' },
+  { code: 'GB', name: 'United Kingdom' },
+  { code: 'FR', name: 'France' },
+  { code: 'IT', name: 'Italy' },
+  { code: 'ES', name: 'Spain' },
+  { code: 'NL', name: 'Netherlands' },
+  { code: 'BE', name: 'Belgium' },
+  { code: 'CH', name: 'Switzerland' },
+  { code: 'SE', name: 'Sweden' },
+  { code: 'NO', name: 'Norway' },
+  { code: 'PL', name: 'Poland' },
+  { code: 'TR', name: 'Turkey' },
+  { code: 'CA', name: 'Canada' },
+  { code: 'MX', name: 'Mexico' },
+  { code: 'BR', name: 'Brazil' },
+  { code: 'AR', name: 'Argentina' },
+  { code: 'CL', name: 'Chile' },
+  { code: 'CO', name: 'Colombia' },
+  { code: 'VN', name: 'Vietnam' },
+  { code: 'TH', name: 'Thailand' },
+  { code: 'MY', name: 'Malaysia' },
+  { code: 'ID', name: 'Indonesia' },
+  { code: 'KR', name: 'South Korea' },
+  { code: 'TW', name: 'Taiwan' },
+  { code: 'SG', name: 'Singapore' },
+  { code: 'AE', name: 'United Arab Emirates' },
+  { code: 'SA', name: 'Saudi Arabia' },
+  { code: 'ZA', name: 'South Africa' },
+  { code: 'AU', name: 'Australia' },
+  { code: 'NZ', name: 'New Zealand' },
+]
+
 interface FormData {
   hsCode: string
   productValue: number
@@ -24,6 +61,19 @@ export function CostCalculatorForm({ onSubmit }: { onSubmit: (data: FormData) =>
     incoterm: 'FOB',
   })
 
+  const updateDecimal = (value: string): number => {
+    if (!value.trim()) return 0
+    const parsed = Number.parseFloat(value)
+    return Number.isNaN(parsed) ? 0 : parsed
+  }
+
+  const updateInteger = (value: string): number => {
+    if (!value.trim()) return 1
+    const parsed = Number.parseInt(value, 10)
+    if (Number.isNaN(parsed)) return 1
+    return Math.max(parsed, 1)
+  }
+
   return (
     <div className="grid grid-cols-2 gap-6">
       <div className="space-y-4">
@@ -36,16 +86,20 @@ export function CostCalculatorForm({ onSubmit }: { onSubmit: (data: FormData) =>
         />
         <div className="grid grid-cols-2 gap-4">
           <Input
-            label="VALUE (USD)"
+            label="UNIT PRICE (USD)"
             type="number"
+            step="0.01"
+            min="0"
             value={form.productValue}
-            onChange={(e) => setForm({ ...form, productValue: Number(e.target.value) })}
+            onChange={(e) => setForm({ ...form, productValue: updateDecimal(e.target.value) })}
           />
           <Input
             label="QUANTITY"
             type="number"
+            step="1"
+            min="1"
             value={form.quantity}
-            onChange={(e) => setForm({ ...form, quantity: Number(e.target.value) })}
+            onChange={(e) => setForm({ ...form, quantity: updateInteger(e.target.value) })}
           />
         </div>
       </div>
@@ -60,10 +114,11 @@ export function CostCalculatorForm({ onSubmit }: { onSubmit: (data: FormData) =>
               onChange={(e) => setForm({ ...form, originCountry: e.target.value })}
               className="w-full bg-transparent border border-dark p-3"
             >
-              <option value="CN">China</option>
-              <option value="VN">Vietnam</option>
-              <option value="IN">India</option>
-              <option value="DE">Germany</option>
+              {MAJOR_COUNTRIES.map((country) => (
+                <option key={country.code} value={country.code}>
+                  {country.name}
+                </option>
+              ))}
             </select>
           </div>
           <div>
@@ -73,10 +128,11 @@ export function CostCalculatorForm({ onSubmit }: { onSubmit: (data: FormData) =>
               onChange={(e) => setForm({ ...form, destinationCountry: e.target.value })}
               className="w-full bg-transparent border border-dark p-3"
             >
-              <option value="US">United States</option>
-              <option value="CA">Canada</option>
-              <option value="MX">Mexico</option>
-              <option value="GB">United Kingdom</option>
+              {MAJOR_COUNTRIES.map((country) => (
+                <option key={country.code} value={country.code}>
+                  {country.name}
+                </option>
+              ))}
             </select>
           </div>
         </div>

@@ -3,7 +3,8 @@ import { classifyProduct, classifyFromImage } from '@/lib/api'
 
 export function useClassification() {
   return useMutation({
-    mutationFn: (description: string) => classifyProduct(description),
+    mutationFn: ({ description, context }: { description: string; context?: string }) =>
+      classifyProduct(description, context),
   })
 }
 

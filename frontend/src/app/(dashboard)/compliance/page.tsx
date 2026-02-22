@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import Link from 'next/link'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { WorkspaceHeader } from '@/components/layout/WorkspaceHeader'
 import { ComplianceChecker } from '@/components/features/compliance/ComplianceChecker'
@@ -8,6 +9,8 @@ import { DocumentChecklist } from '@/components/features/compliance/DocumentChec
 import { SanctionsAlert } from '@/components/features/compliance/SanctionsAlert'
 import { CardSkeleton } from '@/components/ui/Skeleton'
 import { useToast } from '@/components/ui/Toast'
+import { useCompliance } from '@/hooks'
+import { getComplianceDocuments, uploadComplianceDocument, type ComplianceResponse } from '@/lib/api'
 
 interface ComplianceResult {
   sanctionsStatus: 'clear' | 'blocked' | 'warning'
@@ -19,16 +22,89 @@ interface ComplianceResult {
   }>
   documents: Array<{
     name: string
-    status: 'verified' | 'missing' | 'pending'
+    status: 'required' | 'recommended' | 'uploaded' | 'verified'
+    filename?: string
+    uploadedAt?: string
   }>
   overallRisk: 'low' | 'medium' | 'high'
 }
 
 export default function CompliancePage() {
   const [loading, setLoading] = useState(false)
+  const [uploadingDocument, setUploadingDocument] = useState<string | null>(null)
   const [result, setResult] = useState<ComplianceResult | null>(null)
+  const [complianceCaseId, setComplianceCaseId] = useState<string | null>(null)
+  const [caseSignature, setCaseSignature] = useState<string | null>(null)
   const [checkedEntity, setCheckedEntity] = useState<string>('')
   const { add } = useToast()
+  const complianceMutation = useCompliance()
+
+  const buildCaseSignature = (data: {
+    entity: string
+    hsCode: string
+    originCountry: string
+    destinationCountry: string
+  }) => {
+    const hs = data.hsCode.trim().toUpperCase()
+    const origin = data.originCountry.trim().toUpperCase()
+    const destination = data.destinationCountry.trim().toUpperCase()
+    const entity = data.entity.trim().toUpperCase()
+    return [hs, origin, destination, entity].join('|')
+  }
+
+  const toRiskStatus = (status: string): 'clear' | 'warning' | 'danger' | 'pending' => {
+    const normalized = status.toUpperCase()
+    if (normalized === 'CLEAR') return 'clear'
+    if (normalized === 'BLOCKED') return 'danger'
+    if (normalized === 'WARNING' || normalized === 'ACTION_REQUIRED') return 'warning'
+    return 'pending'
+  }
+
+  const mapComplianceResult = (apiResult: ComplianceResponse): ComplianceResult => {
+    const sanctionsCheck = apiResult.checks.find((item) =>
+      item.category.toUpperCase().includes('OFAC'),
+    )
+
+    const sanctionsStatus: ComplianceResult['sanctionsStatus'] =
+      sanctionsCheck?.status.toUpperCase() === 'BLOCKED'
+        ? 'blocked'
+        : sanctionsCheck?.status.toUpperCase() === 'WARNING'
+          ? 'warning'
+          : 'clear'
+
+    const normalizedRisk = apiResult.risk_level.toLowerCase()
+    const overallRisk: ComplianceResult['overallRisk'] =
+      normalizedRisk === 'high' || normalizedRisk === 'medium' || normalizedRisk === 'low'
+        ? normalizedRisk
+        : 'medium'
+
+    const mapDocumentStatus = (
+      status: string,
+    ): 'required' | 'recommended' | 'uploaded' | 'verified' => {
+      const normalized = status.toLowerCase()
+      if (normalized === 'uploaded') return 'uploaded'
+      if (normalized === 'verified') return 'verified'
+      if (normalized === 'recommended') return 'recommended'
+      return 'required'
+    }
+
+    return {
+      sanctionsStatus,
+      sanctionsDetails: sanctionsCheck?.details,
+      riskIndicators: apiResult.checks.map((item) => ({
+        label: item.category,
+        status: toRiskStatus(item.status),
+        details: item.details,
+      })),
+      documents: apiResult.required_documents.map((document) => ({
+        name: document.name,
+        status: mapDocumentStatus(document.status),
+        filename: document.filename,
+        uploadedAt: document.uploaded_at,
+      })),
+      overallRisk,
+    }
+  }
 
   const handleCheck = async (data: {
     entity: string
@@ -39,76 +115,117 @@ export default function CompliancePage() {
   }) => {
     setLoading(true)
     setCheckedEntity(data.entity)
+    const currentSignature = buildCaseSignature(data)
+    const reusableCaseId =
+      caseSignature && caseSignature === currentSignature ? complianceCaseId : null
 
     try {
-      // TODO: Replace with actual API call when backend is ready
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/compliance/check`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+      let apiResult = await complianceMutation.mutateAsync({
+        hs_code: data.hsCode,
+        origin_country: data.originCountry,
+        destination_country: data.destinationCountry,
+        supplier_name: data.entity || undefined,
+        compliance_case_id: reusableCaseId || undefined,
       })
 
-      if (!response.ok) {
-        throw new Error('Failed to run compliance check')
+      if (!apiResult.compliance_case_id && reusableCaseId) {
+        apiResult = await complianceMutation.mutateAsync({
+          hs_code: data.hsCode,
+          origin_country: data.originCountry,
+          destination_country: data.destinationCountry,
+          supplier_name: data.entity || undefined,
+        })
       }
 
-      const apiResult = await response.json()
-      setResult(apiResult)
+      if (apiResult.compliance_case_id) {
+        setComplianceCaseId(apiResult.compliance_case_id)
+        setCaseSignature(currentSignature)
+      }
+      setResult(mapComplianceResult(apiResult))
       add('success', 'Compliance check complete!')
     } catch (error) {
-      // Use mock data for now if API fails
-      console.error('API error, using mock data:', error)
-
-      // Determine sanctions status based on origin country
-      const sanctionedCountries = ['RU', 'IR', 'KP', 'SY', 'CU']
-      const isSanctioned = sanctionedCountries.includes(data.originCountry)
-
-      const mockResult: ComplianceResult = {
-        sanctionsStatus: isSanctioned ? 'blocked' : 'clear',
-        sanctionsDetails: isSanctioned
-          ? `Entity may be subject to sanctions due to origin country restrictions`
-          : 'No matches found in OFAC SDN list',
-        riskIndicators: [
-          {
-            label: 'OFAC Screening',
-            status: isSanctioned ? 'danger' : 'clear',
-            details: isSanctioned ? 'Country is under US sanctions' : 'No OFAC matches found',
-          },
-          {
-            label: 'Export Control',
-            status: data.hsCode.startsWith('84') || data.hsCode.startsWith('85') ? 'warning' : 'clear',
-            details: data.hsCode.startsWith('84') || data.hsCode.startsWith('85')
-              ? 'Product may require export license'
-              : 'No export restrictions identified',
-          },
-          {
-            label: 'Transaction Value',
-            status: data.transactionValue > 100000 ? 'warning' : 'clear',
-            details: data.transactionValue > 100000
-              ? 'High value transaction - additional reporting required'
-              : 'Transaction value within normal limits',
-          },
-          {
-            label: 'Dual-Use Assessment',
-            status: 'pending',
-            details: 'Manual review recommended for dual-use classification',
-          },
-        ],
-        documents: [
-          { name: 'Commercial Invoice', status: 'verified' },
-          { name: 'Bill of Lading', status: 'verified' },
-          { name: 'Packing List', status: 'verified' },
-          { name: 'Certificate of Origin', status: isSanctioned ? 'missing' : 'verified' },
-          { name: 'Export License', status: data.hsCode.startsWith('84') || data.hsCode.startsWith('85') ? 'pending' : 'verified' },
-          { name: 'End-User Certificate', status: isSanctioned ? 'missing' : 'pending' },
-        ],
-        overallRisk: isSanctioned ? 'high' : data.transactionValue > 100000 ? 'medium' : 'low',
+      const message = error instanceof Error ? error.message : 'Compliance check failed'
+      if (message.toLowerCase().includes('compliance_case_id') || message.toLowerCase().includes('compliance case')) {
+        setComplianceCaseId(null)
+        setCaseSignature(null)
       }
-
-      setResult(mockResult)
-      add('warning', 'Using mock data - Backend not connected')
+      add('error', message)
+      setResult(null)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleUpload = async (documentName: string, file: File) => {
+    if (!complianceCaseId) {
+      add('error', 'Run compliance check first to create a case')
+      return
+    }
+
+    const maxUploadBytes = 10 * 1024 * 1024
+    if (file.size > maxUploadBytes) {
+      add('error', 'File exceeds 10MB limit')
+      return
+    }
+
+    const allowedExtensions = ['pdf', 'png', 'jpg', 'jpeg', 'txt', 'doc', 'docx']
+    const extension = file.name.split('.').pop()?.toLowerCase() || ''
+    if (!allowedExtensions.includes(extension)) {
+      add('error', 'Unsupported file type. Use PDF, image, text, or Word docs.')
+      return
+    }
+
+    setUploadingDocument(documentName)
+    try {
+      await uploadComplianceDocument(complianceCaseId, documentName, file)
+
+      let refreshedDocuments: Array<{
+        name: string
+        status: string
+        filename?: string
+        uploaded_at?: string
+      }> | null = null
+
+      try {
+        const refreshed = await getComplianceDocuments(complianceCaseId)
+        refreshedDocuments = refreshed.documents
+      } catch {
+        refreshedDocuments = null
+      }
+
+      setResult((prev) => {
+        if (!prev) return prev
+        if (!refreshedDocuments) {
+          return {
+            ...prev,
+            documents: prev.documents.map((item) =>
+              item.name === documentName
+                ? {
+                    ...item,
+                    status: 'uploaded',
+                    filename: file.name,
+                    uploadedAt: new Date().toISOString(),
+                  }
+                : item,
+            ),
+          }
+        }
+        return {
+          ...prev,
+          documents: refreshedDocuments.map((item) => ({
+            name: item.name,
+            status: (item.status || 'required') as 'required' | 'recommended' | 'uploaded' | 'verified',
+            filename: item.filename,
+            uploadedAt: item.uploaded_at,
+          })),
+        }
+      })
+      add('success', `${documentName} uploaded`)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Document upload failed'
+      add('error', message)
+    } finally {
+      setUploadingDocument(null)
     }
   }
 
@@ -121,7 +238,14 @@ export default function CompliancePage() {
         metaValue="ACTIVE"
       />
 
-      <div className="flex-1 overflow-y-auto p-6 space-y-6">
+      <div className="dashboard-scroll flex-1 overflow-y-auto p-6 space-y-6">
+        <div className="border border-dark p-4 bg-canvas/30 text-sm">
+          <div className="label mb-1">USAGE TIER</div>
+          <div>
+            Upgrade for higher compliance-check limits and team workflows.
+            <Link href="/business" className="underline ml-1">See plans</Link>.
+          </div>
+        </div>
         <ComplianceChecker onCheck={handleCheck} />
 
         {loading && (
@@ -133,11 +257,41 @@ export default function CompliancePage() {
 
         {!loading && result && (
           <>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="border border-dark p-3 bg-canvas">
+                <div className="label mb-1">COMPLIANCE CASE ID</div>
+                <div className="font-pixel text-xs break-all">
+                  {complianceCaseId || 'N/A'}
+                </div>
+              </div>
+              <div className="border border-dark p-3 bg-canvas">
+                <div className="label mb-1">CHECK SUMMARY</div>
+                <div className="text-xs opacity-80">
+                  {result.riskIndicators.length} checks run, {result.documents.length} documents tracked
+                </div>
+              </div>
+            </div>
+
             <SanctionsAlert
               entity={checkedEntity}
               status={result.sanctionsStatus}
               details={result.sanctionsDetails}
             />
+
+            {result.riskIndicators
+              .filter((indicator) => indicator.status === 'warning' || indicator.status === 'danger')
+              .length > 0 && (
+              <div className="border border-warning p-4 bg-warning/5">
+                <div className="label mb-2">ACTION ITEMS</div>
+                <ul className="text-sm space-y-1">
+                  {result.riskIndicators
+                    .filter((indicator) => indicator.status === 'warning' || indicator.status === 'danger')
+                    .map((indicator) => (
+                      <li key={indicator.label}>- {indicator.label}: {indicator.details || 'Review required'}</li>
+                    ))}
+                </ul>
+              </div>
+            )}
 
             <div className="border border-dark p-6">
               <div className="flex items-center justify-between mb-4">
@@ -157,7 +311,11 @@ export default function CompliancePage() {
               </div>
             </div>
 
-            <DocumentChecklist documents={result.documents} />
+            <DocumentChecklist
+              documents={result.documents}
+              onUpload={handleUpload}
+              uploadingDocument={uploadingDocument}
+            />
           </>
         )}
 

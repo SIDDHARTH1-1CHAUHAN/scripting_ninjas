@@ -14,11 +14,16 @@ ROUTE_DISTANCES = {
 }
 
 
-def calculate_emissions(weight_kg: float, mode: str, transit_days: int) -> float:
+def calculate_emissions(
+    weight_kg: float,
+    mode: str,
+    transit_days: int,
+    distance_km: float | None = None,
+) -> float:
     """Calculate CO2 emissions for shipment."""
     weight_tons = weight_kg / 1000
     factor = EMISSION_FACTORS.get(mode, 0.015)
-    distance = ROUTE_DISTANCES.get(mode, 15000)
+    distance = distance_km if distance_km is not None else ROUTE_DISTANCES.get(mode, 15000)
 
     emissions = weight_tons * distance * factor
 

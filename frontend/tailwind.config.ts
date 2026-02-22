@@ -5,17 +5,17 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        canvas: '#C8C8C8',
-        dark: '#080808',
-        panel: '#D1D1D1',
-        'text-main': '#000000',
-        'text-inv': '#E8E8E8',
-        'text-muted': '#888888',
-        warning: '#FF4141',
+        canvas: 'var(--bg-canvas)',
+        dark: 'var(--bg-dark)',
+        panel: 'var(--bg-panel)',
+        'text-main': 'var(--text-main)',
+        'text-inv': 'var(--text-inv)',
+        'text-muted': 'var(--text-muted)',
+        warning: 'var(--warning)',
       },
       fontFamily: {
-        sans: ['Space Grotesk', 'sans-serif'],
-        pixel: ['Silkscreen', 'monospace'],
+        sans: ['Manrope', 'Space Grotesk', 'sans-serif'],
+        pixel: ['Chakra Petch', 'Space Grotesk', 'sans-serif'],
       },
       borderRadius: {
         none: '0px',

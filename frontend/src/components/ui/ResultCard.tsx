@@ -7,8 +7,8 @@ interface Props {
 
 export function ResultCard({ label, children }: Props) {
   return (
-    <div className="border border-[#333] p-5">
-      <div className="label text-[#888]">{label}</div>
+    <div className="border border-dark p-5 bg-panel/70 shadow-[var(--surface-shadow)] backdrop-blur-sm">
+      <div className="label">{label}</div>
       {children}
     </div>
   )

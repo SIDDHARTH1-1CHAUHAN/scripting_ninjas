@@ -1,0 +1,32 @@
+<svg width="96" height="96" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="tradeoptBg" x1="14" y1="10" x2="84" y2="90" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FDF9F2"/>
+      <stop offset="1" stop-color="#EEE8DD"/>
+    </linearGradient>
+    <linearGradient id="tradeoptCore" x1="20" y1="20" x2="76" y2="76" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#6A57B6"/>
+      <stop offset="1" stop-color="#B5873D"/>
+    </linearGradient>
+    <linearGradient id="tradeoptWave" x1="28" y1="30" x2="70" y2="70" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8A79D6"/>
+      <stop offset="1" stop-color="#D1A55A"/>
+    </linearGradient>
+    <filter id="tradeoptSoftShadow" x="2" y="2" width="92" height="92" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#2E2550" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#tradeoptSoftShadow)">
+    <rect x="8" y="8" width="80" height="80" rx="24" fill="url(#tradeoptBg)" stroke="#9A8EBA" stroke-width="2.4"/>
+    <rect x="18" y="18" width="60" height="60" rx="19" fill="#FFFFFF" fill-opacity="0.7"/>
+  </g>
+
+  <path d="M25 56C31 47 39 42 48 42C57 42 65 47 71 56" stroke="url(#tradeoptWave)" stroke-width="4.5" stroke-linecap="round"/>
+  <path d="M24 62H72" stroke="url(#tradeoptCore)" stroke-width="4.5" stroke-linecap="round"/>
+  <circle cx="24" cy="62" r="5.5" fill="#6A57B6"/>
+  <circle cx="72" cy="62" r="5.5" fill="#B5873D"/>
+
+  <path d="M48 24V36" stroke="url(#tradeoptCore)" stroke-width="4.5" stroke-linecap="round"/>
+  <path d="M42 30L48 24L54 30" stroke="url(#tradeoptCore)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

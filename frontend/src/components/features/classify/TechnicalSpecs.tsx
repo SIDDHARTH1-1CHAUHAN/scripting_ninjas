@@ -31,39 +31,47 @@ export function TechnicalSpecs({ onUpdate }: Props) {
 
   return (
     <div className="space-y-4">
-      <div className="label">TECHNICAL_SPECIFICATIONS</div>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="label">Technical Specifications</div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Input
-          label="MATERIAL"
+          label="Material"
           placeholder="e.g., Lithium-ion battery"
           value={specs.material}
           onChange={handleChange('material')}
+          className="classify-soft-input rounded-xl"
         />
         <Input
-          label="WEIGHT"
+          label="Weight"
           placeholder="e.g., 250g"
           value={specs.weight}
           onChange={handleChange('weight')}
+          className="classify-soft-input rounded-xl"
         />
         <Input
-          label="DIMENSIONS"
+          label="Dimensions"
           placeholder="e.g., 10x5x2 cm"
           value={specs.dimensions}
           onChange={handleChange('dimensions')}
+          className="classify-soft-input rounded-xl"
         />
         <Input
-          label="ORIGIN_COUNTRY"
+          label="Origin Country"
           placeholder="e.g., China"
           value={specs.origin_country}
           onChange={handleChange('origin_country')}
+          className="classify-soft-input rounded-xl"
         />
       </div>
       <Input
-        label="INTENDED_USE"
+        label="Intended Use"
         placeholder="Primary function of the product"
         value={specs.intended_use}
         onChange={handleChange('intended_use')}
+        className="classify-soft-input rounded-xl"
       />
+      <div className="text-xs text-text-muted">
+        Add as many known specs as possible. Better technical detail improves classification accuracy.
+      </div>
     </div>
   )
 }
