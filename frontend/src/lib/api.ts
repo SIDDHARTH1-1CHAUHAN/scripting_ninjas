@@ -363,16 +363,14 @@ export interface AnalyticsExportResponse {
 export interface BusinessModelResponse {
   product: string
   positioning: string
-  target_customers: string[]
   pricing: Array<{
     tier: string
     price_monthly_usd: number
     price_yearly_usd?: number
     who_for: string
-    includes: string[]
+  includes: string[]
   }>
   revenue_model: string[]
-  go_to_market: string[]
   competitive_edge: string[]
   usp?: string[]
   overage_pricing?: Array<{

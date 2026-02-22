@@ -1,16 +1,13 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 
 import { AppLayout } from '@/components/layout/AppLayout'
 import { WorkspaceHeader } from '@/components/layout/WorkspaceHeader'
-import { generateBusinessPitch, getBusinessModel } from '@/lib/api'
+import { getBusinessModel } from '@/lib/api'
 
 export default function BusinessPage() {
-  const [prompt, setPrompt] = useState(
-    'Create a crisp 90-second hackathon pitch for TradeOptimize AI focused on ROI for import teams.',
-  )
   const [monthlyImportValue, setMonthlyImportValue] = useState(250000)
   const [averageDutyRate, setAverageDutyRate] = useState(10)
   const [optimizationRate, setOptimizationRate] = useState(12)
@@ -18,10 +15,6 @@ export default function BusinessPage() {
   const modelQuery = useQuery({
     queryKey: ['business-model'],
     queryFn: getBusinessModel,
-  })
-
-  const pitchMutation = useMutation({
-    mutationFn: generateBusinessPitch,
   })
 
   const pricingRows = useMemo(() => modelQuery.data?.pricing ?? [], [modelQuery.data?.pricing])
@@ -41,74 +34,43 @@ export default function BusinessPage() {
     return 'FREE'
   }, [roiMonthlySavings])
 
-  const rightPanel = (
-    <div className="space-y-6">
-      <div>
-        <div className="label text-[#888] mb-2">AI PITCH GENERATOR</div>
-        <textarea
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-          className="w-full min-h-[140px] bg-transparent border border-[#444] p-3 text-sm focus-ring"
-        />
-        <button
-          onClick={() => pitchMutation.mutate(prompt)}
-          disabled={pitchMutation.isPending}
-          className="mt-3 border border-[#888] px-4 py-2 font-pixel text-xs hover:bg-canvas hover:text-dark disabled:opacity-60"
-        >
-          {pitchMutation.isPending ? 'GENERATING...' : 'GENERATE_MEGALLM_PITCH'}
-        </button>
-      </div>
-
-      {pitchMutation.data && (
-        <div className="border border-[#555] p-3 text-xs whitespace-pre-wrap">
-          <div className="label text-[#888] mb-2">OUTPUT</div>
-          {pitchMutation.data.pitch}
-          <div className="mt-2 opacity-70">
-            SOURCE: {pitchMutation.data.provider.toUpperCase()} / {pitchMutation.data.model}
-            {' · '}
-            {pitchMutation.data.live ? 'LIVE' : 'FALLBACK'}
-          </div>
-        </div>
-      )}
-
-      <div className="border border-[#555] p-3 text-xs">
-        <div className="label text-[#888] mb-2">QUICK_ROI</div>
-        <div className="space-y-1">
-          <div>EST. SAVINGS/MO: <span className="font-pixel">${roiMonthlySavings.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span></div>
-          <div>EST. SAVINGS/YR: <span className="font-pixel">${(roiMonthlySavings * 12).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span></div>
-          <div>RECOMMENDED: <span className="font-pixel">{recommendedPlan}</span></div>
-        </div>
-      </div>
-    </div>
-  )
-
   return (
-    <AppLayout rightPanel={rightPanel}>
-      <WorkspaceHeader title="BUSINESS" pixelTitle="MODEL" metaLabel="MONETIZATION" metaValue="SAAS + USAGE" />
+    <AppLayout>
+      <WorkspaceHeader title="BUSINESS" pixelTitle="MODEL" metaLabel="FOCUS" metaValue="UNIT ECONOMICS" />
 
-      <div className="dashboard-scroll p-6 space-y-6 overflow-y-auto">
-        {modelQuery.isLoading && <div className="border border-dark p-4 text-sm">Loading business model...</div>}
+      <div className="business-page dashboard-scroll p-6 space-y-6 overflow-y-auto">
+        {modelQuery.isLoading && <div className="business-surface p-4 text-sm">Loading business narrative...</div>}
         {modelQuery.isError && (
-          <div className="border border-warning p-4 text-sm">
-            Failed to load business model data.
+          <div className="business-surface p-4 text-sm border-warning">
+            Unable to load business model data right now.
           </div>
         )}
 
         {modelQuery.data && (
           <>
-            <section className="border border-dark p-4">
+            <section className="business-surface p-4">
               <div className="label mb-2">POSITIONING</div>
               <div className="text-lg font-semibold">{modelQuery.data.product}</div>
               <div className="text-sm mt-1">{modelQuery.data.positioning}</div>
+              <div className="mt-2 text-xs opacity-75">
+                Takeaway: We turn trade complexity into margin-protecting execution.
+              </div>
+              <div className="business-inset mt-3 p-3 text-sm">
+                <div className="label mb-1">NORTH STAR</div>
+                {modelQuery.data.north_star_metric}
+              </div>
             </section>
 
             {hackathonPitch && (
-              <section className="border border-dark p-4 bg-canvas/40">
+              <section className="business-surface business-surface-glitter p-4">
                 <div className="label mb-2">HACKATHON PITCH</div>
                 <div className="text-base font-semibold">{hackathonPitch.one_liner}</div>
+                <div className="mt-2 text-xs opacity-75">
+                  Takeaway: This is an execution platform with measurable financial outcomes, not just another AI chatbot.
+                </div>
 
                 <div className="mt-4 grid md:grid-cols-2 gap-4 text-sm">
-                  <div className="border border-dark p-3">
+                  <div className="business-card p-3">
                     <div className="label mb-2">PROBLEM</div>
                     <ul className="space-y-2">
                       {hackathonPitch.problem.map((item) => (
@@ -116,7 +78,7 @@ export default function BusinessPage() {
                       ))}
                     </ul>
                   </div>
-                  <div className="border border-dark p-3">
+                  <div className="business-card p-3">
                     <div className="label mb-2">SOLUTION</div>
                     <ul className="space-y-2">
                       {hackathonPitch.solution.map((item) => (
@@ -124,7 +86,7 @@ export default function BusinessPage() {
                       ))}
                     </ul>
                   </div>
-                  <div className="border border-dark p-3">
+                  <div className="business-card p-3">
                     <div className="label mb-2">DEMO STORY</div>
                     <ul className="space-y-2">
                       {hackathonPitch.demo_story.map((item) => (
@@ -132,7 +94,7 @@ export default function BusinessPage() {
                       ))}
                     </ul>
                   </div>
-                  <div className="border border-dark p-3">
+                  <div className="business-card p-3">
                     <div className="label mb-2">WHY WE WIN</div>
                     <ul className="space-y-2">
                       {hackathonPitch.why_we_win.map((item) => (
@@ -143,7 +105,7 @@ export default function BusinessPage() {
                 </div>
 
                 <div className="mt-4 grid md:grid-cols-2 gap-4 text-sm">
-                  <div className="border border-dark p-3">
+                  <div className="business-card p-3">
                     <div className="label mb-2">BUSINESS MODEL SUMMARY</div>
                     <ul className="space-y-2">
                       {hackathonPitch.business_model_summary.map((item) => (
@@ -151,7 +113,7 @@ export default function BusinessPage() {
                       ))}
                     </ul>
                   </div>
-                  <div className="border border-dark p-3 bg-dark text-text-inv">
+                  <div className="business-card business-card-dark p-3">
                     <div className="label text-[#a7a7a7] mb-2">HACKATHON ASK</div>
                     <div>{hackathonPitch.ask}</div>
                   </div>
@@ -159,31 +121,15 @@ export default function BusinessPage() {
               </section>
             )}
 
-            <section className="grid md:grid-cols-2 gap-4">
-              <div className="border border-dark p-4">
-                <div className="label mb-2">TARGET CUSTOMERS</div>
-                <ul className="text-sm space-y-2">
-                  {modelQuery.data.target_customers.map((item) => (
-                    <li key={item}>• {item}</li>
-                  ))}
-                </ul>
+            <section className="business-surface p-4">
+              <div className="label mb-1">PRICING TIERS</div>
+              <div className="text-xs opacity-75 mb-3">Designed to expand from pilot teams to enterprise-scale trade operations.</div>
+              <div className="text-xs opacity-75 mb-3">
+                Takeaway: Low-friction entry, clear upgrade path, and strong expansion revenue.
               </div>
-
-              <div className="border border-dark p-4">
-                <div className="label mb-2">GO TO MARKET</div>
-                <ul className="text-sm space-y-2">
-                  {modelQuery.data.go_to_market.map((item) => (
-                    <li key={item}>• {item}</li>
-                  ))}
-                </ul>
-              </div>
-            </section>
-
-            <section className="border border-dark p-4">
-              <div className="label mb-3">PRICING TIERS</div>
               <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-3">
                 {pricingRows.map((tier) => (
-                  <div key={tier.tier} className="border border-dark p-3">
+                  <div key={tier.tier} className="business-card p-3">
                     <div className="font-pixel text-sm">{tier.tier}</div>
                     <div className="text-2xl font-bold">${tier.price_monthly_usd}/mo</div>
                     {typeof tier.price_yearly_usd === 'number' && (
@@ -201,11 +147,15 @@ export default function BusinessPage() {
             </section>
 
             {overageRows.length > 0 && (
-              <section className="border border-dark p-4">
-                <div className="label mb-3">USAGE OVERAGES</div>
+              <section className="business-surface p-4">
+                <div className="label mb-1">USAGE OVERAGES</div>
+                <div className="text-xs opacity-75 mb-3">Scales revenue with actual platform usage while preserving transparent pricing.</div>
+                <div className="text-xs opacity-75 mb-3">
+                  Takeaway: As customer shipment volume grows, monetization grows proportionally.
+                </div>
                 <div className="space-y-2">
                   {overageRows.map((row) => (
-                    <div key={row.feature} className="flex items-center justify-between border border-dark p-2 text-sm">
+                    <div key={row.feature} className="business-card flex items-center justify-between p-2 text-sm">
                       <div>{row.feature}</div>
                       <div className="font-pixel">${row.price_usd} / {row.unit}</div>
                     </div>
@@ -215,10 +165,13 @@ export default function BusinessPage() {
             )}
 
             {membership && (
-              <section className="border border-dark p-4 bg-canvas/40">
-                <div className="label mb-2">MEMBERSHIP ADD-ON</div>
+              <section className="business-surface business-surface-glitter p-4">
+                <div className="label mb-2">STRATEGIC ADD-ON</div>
                 <div className="text-lg font-semibold">{membership.name}</div>
                 <div className="font-pixel mt-1">${membership.price_monthly_usd}/mo</div>
+                <div className="mt-2 text-xs opacity-75">
+                  Takeaway: Adds high-margin advisory revenue on top of core SaaS.
+                </div>
                 <ul className="text-sm mt-3 space-y-2">
                   {membership.includes.map((item) => (
                     <li key={item}>• {item}</li>
@@ -227,8 +180,12 @@ export default function BusinessPage() {
               </section>
             )}
 
-            <section className="border border-dark p-4">
-              <div className="label mb-3">ROI CALCULATOR</div>
+            <section className="business-surface p-4">
+              <div className="label mb-1">ROI CALCULATOR</div>
+              <div className="text-xs opacity-75 mb-3">Convert trade optimization potential into dollar impact for budgeting and plan selection.</div>
+              <div className="text-xs opacity-75 mb-3">
+                Takeaway: Buyers can justify spend with quantified savings before procurement.
+              </div>
               <div className="grid md:grid-cols-3 gap-3">
                 <label className="text-xs space-y-1">
                   <div className="label">MONTHLY IMPORT VALUE (USD)</div>
@@ -237,7 +194,7 @@ export default function BusinessPage() {
                     min={0}
                     value={monthlyImportValue}
                     onChange={(event) => setMonthlyImportValue(Math.max(0, Number(event.target.value) || 0))}
-                    className="w-full border border-dark bg-transparent p-2 text-sm focus-ring"
+                    className="business-input w-full p-2 text-sm focus-ring"
                   />
                 </label>
                 <label className="text-xs space-y-1">
@@ -248,7 +205,7 @@ export default function BusinessPage() {
                     max={100}
                     value={averageDutyRate}
                     onChange={(event) => setAverageDutyRate(Math.min(100, Math.max(0, Number(event.target.value) || 0)))}
-                    className="w-full border border-dark bg-transparent p-2 text-sm focus-ring"
+                    className="business-input w-full p-2 text-sm focus-ring"
                   />
                 </label>
                 <label className="text-xs space-y-1">
@@ -259,36 +216,40 @@ export default function BusinessPage() {
                     max={100}
                     value={optimizationRate}
                     onChange={(event) => setOptimizationRate(Math.min(100, Math.max(0, Number(event.target.value) || 0)))}
-                    className="w-full border border-dark bg-transparent p-2 text-sm focus-ring"
+                    className="business-input w-full p-2 text-sm focus-ring"
                   />
                 </label>
               </div>
               <div className="mt-4 grid sm:grid-cols-3 gap-3 text-sm">
-                <div className="border border-dark p-3">
-                  <div className="label">EST. SAVINGS/MONTH</div>
+                <div className="business-card p-3">
+                  <div className="label">ESTIMATED SAVINGS / MONTH</div>
                   <div className="font-pixel text-xl mt-1">
                     ${roiMonthlySavings.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                   </div>
                 </div>
-                <div className="border border-dark p-3">
-                  <div className="label">EST. SAVINGS/YEAR</div>
+                <div className="business-card p-3">
+                  <div className="label">ESTIMATED SAVINGS / YEAR</div>
                   <div className="font-pixel text-xl mt-1">
                     ${(roiMonthlySavings * 12).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                   </div>
                 </div>
-                <div className="border border-dark p-3 bg-dark text-text-inv">
-                  <div className="label text-[#aaa]">RECOMMENDED PLAN</div>
+                <div className="business-card business-card-dark p-3">
+                  <div className="label text-[#aaa]">RECOMMENDED TIER</div>
                   <div className="font-pixel text-xl mt-1">{recommendedPlan}</div>
                 </div>
               </div>
             </section>
 
             {revenueScenarios.length > 0 && (
-              <section className="border border-dark p-4">
-                <div className="label mb-3">REVENUE SCENARIOS</div>
+              <section className="business-surface p-4">
+                <div className="label mb-1">REVENUE SCENARIOS</div>
+                <div className="text-xs opacity-75 mb-3">Three growth bands to communicate traction targets and funding narrative.</div>
+                <div className="text-xs opacity-75 mb-3">
+                  Takeaway: Even conservative adoption supports a scalable ARR trajectory.
+                </div>
                 <div className="grid md:grid-cols-3 gap-3 text-sm">
                   {revenueScenarios.map((scenario) => (
-                    <div key={scenario.name} className="border border-dark p-3">
+                    <div key={scenario.name} className="business-card p-3">
                       <div className="font-pixel">{scenario.name}</div>
                       <div className="text-xs opacity-70 mt-1">{scenario.mix}</div>
                       <div className="mt-3">MRR: <span className="font-pixel">${scenario.mrr_usd.toLocaleString()}</span></div>
@@ -300,36 +261,42 @@ export default function BusinessPage() {
             )}
 
             <section className="grid md:grid-cols-2 gap-4">
-              <div className="border border-dark p-4">
-                <div className="label mb-2">REVENUE MODEL</div>
+              <div className="business-surface p-4">
+                <div className="label mb-2">MONETIZATION STRATEGY</div>
                 <ul className="text-sm space-y-2">
                   {modelQuery.data.revenue_model.map((item) => (
                     <li key={item}>• {item}</li>
                   ))}
                 </ul>
+                <div className="mt-3 text-xs opacity-75">
+                  Takeaway: Predictable recurring revenue with multiple expansion levers.
+                </div>
               </div>
 
-              <div className="border border-dark p-4">
-                <div className="label mb-2">COMPETITIVE EDGE</div>
+              <div className="business-surface p-4">
+                <div className="label mb-2">DEFENSIBLE ADVANTAGE</div>
                 <ul className="text-sm space-y-2">
                   {modelQuery.data.competitive_edge.map((item) => (
                     <li key={item}>• {item}</li>
                   ))}
                 </ul>
-                <div className="mt-3 text-xs opacity-70">
-                  North star: {modelQuery.data.north_star_metric}
+                <div className="mt-3 text-xs opacity-75">
+                  Takeaway: Workflow depth + explainability creates higher switching cost.
                 </div>
               </div>
             </section>
 
             {usps.length > 0 && (
-              <section className="border border-dark p-4">
-                <div className="label mb-2">USP</div>
+              <section className="business-surface p-4">
+                <div className="label mb-2">CORE DIFFERENTIATORS</div>
                 <ul className="text-sm space-y-2">
                   {usps.map((item) => (
                     <li key={item}>• {item}</li>
                   ))}
                 </ul>
+                <div className="mt-3 text-xs opacity-75">
+                  Takeaway: TradeOptimize wins by combining operational usability with financial clarity.
+                </div>
               </section>
             )}
           </>

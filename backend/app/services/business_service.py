@@ -4,12 +4,7 @@ class BusinessService:
     def get_business_model(self) -> dict:
         return {
             "product": "TradeOptimize AI",
-            "positioning": "AI decision layer for import teams to reduce landed cost, compliance risk, and payment timing loss",
-            "target_customers": [
-                "SMB and mid-market importers (50-8,000 shipments/year)",
-                "Import operations teams in electronics, consumer goods, and industrial parts",
-                "Customs brokers and freight partners offering managed compliance services",
-            ],
+            "positioning": "An operator-first AI control layer that improves import margins by reducing duty leakage, compliance exposure, and FX timing loss.",
             "pricing": [
                 {
                     "tier": "Free",
@@ -26,8 +21,8 @@ class BusinessService:
                 },
                 {
                     "tier": "Starter",
-                    "price_monthly_usd": 129,
-                    "price_yearly_usd": 1290,
+                    "price_monthly_usd": 99,
+                    "price_yearly_usd": 990,
                     "who_for": "Lean import teams",
                     "includes": [
                         "900 text HS classifications / month",
@@ -39,8 +34,8 @@ class BusinessService:
                 },
                 {
                     "tier": "Growth",
-                    "price_monthly_usd": 399,
-                    "price_yearly_usd": 3990,
+                    "price_monthly_usd": 299,
+                    "price_yearly_usd": 2990,
                     "who_for": "Scaling multi-lane operations",
                     "includes": [
                         "Everything in Starter",
@@ -53,8 +48,8 @@ class BusinessService:
                 },
                 {
                     "tier": "Enterprise",
-                    "price_monthly_usd": 1299,
-                    "price_yearly_usd": 12990,
+                    "price_monthly_usd": 899,
+                    "price_yearly_usd": 8990,
                     "who_for": "High-volume and regulated import networks",
                     "includes": [
                         "Everything in Growth",
@@ -66,37 +61,31 @@ class BusinessService:
                 },
             ],
             "revenue_model": [
-                "Primary: subscription SaaS by team size and shipment complexity",
-                "Secondary: usage overages for high-volume AI workflows (classification, compliance, route simulations)",
-                "Premium: implementation and integration setup fee for enterprise deployments",
-                "Add-on: FX settlement intelligence pack for treasury-heavy importers",
-                "Channel: revenue-share partnerships with brokers and 3PL advisory partners",
-            ],
-            "go_to_market": [
-                "Land lighthouse pilots in high-duty import categories and prove 30-day savings",
-                "Product-led conversion from Free to Starter via usage/limit nudges",
-                "Broker and forwarder partnerships as channel accelerators",
-                "Publish ROI snapshots: duties saved, delays avoided, and compliance incidents prevented",
+                "Tiered subscription SaaS priced by workflow depth and operational scale.",
+                "Usage-linked overages for intensive AI workflows at high shipment volume.",
+                "Enterprise implementation and integration fees for custom deployments.",
+                "Strategic add-ons for advanced trade intelligence and policy advisory.",
+                "Channel revenue share with customs brokers and logistics advisory partners.",
             ],
             "competitive_edge": [
-                "Unified workflow across HS, landed cost, compliance, routing, cargo, and FX timing",
-                "Decision-grade outputs with explainability and operational context",
-                "Hybrid model routing + caching to keep response fast and margins healthy",
+                "End-to-end trade decision workflow in one product, not point tools.",
+                "Explainable recommendations tied to operator actions and approvals.",
+                "Model-routing + caching architecture that keeps response fast and unit economics strong.",
             ],
             "usp": [
-                "One control tower for trade decisions that are usually spread across multiple tools",
-                "Embedded trade logic with actionable recommendations, not generic AI answers",
-                "ROI-native reporting so finance and operations can measure value continuously",
+                "Single control tower replacing fragmented spreadsheets, broker chats, and siloed apps.",
+                "Trade-aware intelligence that gives concrete actions, not generic model output.",
+                "ROI-native reporting so finance, compliance, and ops align on measurable outcomes.",
             ],
             "overage_pricing": [
-                {"feature": "Text classification", "unit": "request", "price_usd": 0.025},
-                {"feature": "Image classification", "unit": "request", "price_usd": 0.07},
-                {"feature": "Compliance workflow", "unit": "check", "price_usd": 0.045},
-                {"feature": "Route simulation API", "unit": "10,000 calls", "price_usd": 2.5},
+                {"feature": "Text classification", "unit": "request", "price_usd": 0.02},
+                {"feature": "Image classification", "unit": "request", "price_usd": 0.05},
+                {"feature": "Compliance workflow", "unit": "check", "price_usd": 0.035},
+                {"feature": "Route simulation API", "unit": "10,000 calls", "price_usd": 2.0},
             ],
             "membership_addon": {
                 "name": "Trade Intelligence Briefing",
-                "price_monthly_usd": 79,
+                "price_monthly_usd": 59,
                 "includes": [
                     "Monthly tariff and sanctions update call",
                     "Playbooks for high-risk import categories",
@@ -108,52 +97,52 @@ class BusinessService:
                 {
                     "name": "Conservative",
                     "mix": "35 Starter + 9 Growth + 2 Enterprise + 15 Add-on",
-                    "mrr_usd": 11939,
-                    "arr_usd": 143268,
+                    "mrr_usd": 8839,
+                    "arr_usd": 106068,
                 },
                 {
                     "name": "Base Case",
                     "mix": "95 Starter + 30 Growth + 7 Enterprise + 40 Add-on",
-                    "mrr_usd": 33843,
-                    "arr_usd": 406116,
+                    "mrr_usd": 27028,
+                    "arr_usd": 324336,
                 },
                 {
                     "name": "Aggressive",
                     "mix": "220 Starter + 72 Growth + 18 Enterprise + 90 Add-on",
-                    "mrr_usd": 84742,
-                    "arr_usd": 1016904,
+                    "mrr_usd": 64800,
+                    "arr_usd": 777600,
                 },
             ],
             "north_star_metric": "Net landed-cost savings realized per active customer per month",
             "hackathon_pitch": {
-                "one_liner": "TradeOptimize AI helps import teams decide what to classify, what it will cost, what can block clearance, and when to settle FX payments.",
+                "one_liner": "TradeOptimize AI gives import teams one clear, explainable plan from classification to payment timing so every shipment protects margin.",
                 "problem": [
-                    "Import decisions are fragmented across spreadsheets, brokers, and siloed tools.",
-                    "Wrong HS, hidden duty exposure, and delayed compliance checks cause preventable losses.",
-                    "Teams also miss FX timing opportunities that directly impact landed margin.",
+                    "Import decisions are fragmented across spreadsheets, broker emails, and disconnected tools.",
+                    "Wrong HS codes, hidden duty exposure, and delayed compliance checks create preventable cost and delay.",
+                    "Finance teams miss FX timing windows that materially impact landed margin.",
                 ],
                 "solution": [
-                    "A unified control tower for HS classification, landed cost, compliance, routing, cargo visibility, and FX settlement timing.",
-                    "Action-oriented recommendations with confidence and rationale for faster approvals.",
-                    "Cross-functional view for ops, finance, and compliance to execute one aligned plan.",
+                    "A unified control tower across HS classification, landed cost, compliance, routing, cargo visibility, and FX settlement timing.",
+                    "Actionable recommendations with confidence + rationale so teams approve faster and execute with less risk.",
+                    "Shared workflow for ops, finance, and compliance to run one aligned shipment playbook.",
                 ],
                 "demo_story": [
-                    "Step 1: Classify product and quantify confidence + alternatives.",
-                    "Step 2: Simulate landed cost and compliance risk before booking shipment.",
-                    "Step 3: Forecast FX window and schedule pay-low/receive-high settlement timing.",
-                    "Step 4: Track shipment and monitor alerts until destination.",
+                    "Step 1: Classify product with confidence score, alternatives, and reasoning.",
+                    "Step 2: Simulate landed cost and compliance exposure before booking.",
+                    "Step 3: Forecast FX movement and optimize pay-low / receive-high timing.",
+                    "Step 4: Monitor cargo and risk alerts through delivery.",
                 ],
                 "business_model_summary": [
-                    "Subscription tiers for recurring platform revenue.",
-                    "Usage overages for heavy AI workflows.",
-                    "Enterprise integration fees and partner channels for expansion.",
+                    "Recurring SaaS tiers for predictable revenue and expansion paths.",
+                    "Usage overages align monetization with customer value at scale.",
+                    "Enterprise setup + partner channels improve high-ACV growth.",
                 ],
                 "why_we_win": [
-                    "Single workflow replaces multiple disconnected tools.",
-                    "Measurable ROI: duties saved, risks reduced, and faster decision cycles.",
-                    "Built for practical operator execution, not just analytics dashboards.",
+                    "Single workflow replaces disconnected point solutions.",
+                    "Clear ROI: duties saved, risks reduced, and faster decision cycles.",
+                    "Built for operator execution, not passive analytics.",
                 ],
-                "ask": "Pilot with import teams handling duty-sensitive lanes and convert high-ROI accounts into annual Growth/Enterprise plans.",
+                "ask": "Run pilots with duty-sensitive import lanes, prove 30-day margin impact, then convert winning accounts to annual Growth and Enterprise contracts.",
             },
         }
 
