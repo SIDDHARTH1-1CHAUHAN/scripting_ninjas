@@ -363,16 +363,14 @@ export interface AnalyticsExportResponse {
 export interface BusinessModelResponse {
   product: string
   positioning: string
-  target_customers: string[]
   pricing: Array<{
     tier: string
     price_monthly_usd: number
     price_yearly_usd?: number
     who_for: string
-    includes: string[]
+  includes: string[]
   }>
   revenue_model: string[]
-  go_to_market: string[]
   competitive_edge: string[]
   usp?: string[]
   overage_pricing?: Array<{
@@ -392,6 +390,15 @@ export interface BusinessModelResponse {
     arr_usd: number
   }>
   north_star_metric: string
+  hackathon_pitch?: {
+    one_liner: string
+    problem: string[]
+    solution: string[]
+    demo_story: string[]
+    business_model_summary: string[]
+    why_we_win: string[]
+    ask: string
+  }
 }
 
 export interface BusinessPitchResponse {
@@ -400,6 +407,62 @@ export interface BusinessPitchResponse {
   model: string
   live: boolean
   error?: string
+}
+
+export interface PaymentCheckoutOrderRequest {
+  plan_tier: string
+  billing_cycle: 'monthly' | 'yearly'
+  customer_name: string
+  customer_email: string
+}
+
+export interface PaymentCheckoutOrderResponse {
+  key_id: string
+  order_id: string
+  amount: number
+  currency: string
+  plan_tier: string
+  billing_cycle: 'monthly' | 'yearly'
+  customer: {
+    name: string
+    email: string
+  }
+  gateway: string
+}
+
+export interface PaymentVerifyRequest {
+  plan_tier: string
+  billing_cycle: 'monthly' | 'yearly'
+  customer_email: string
+  razorpay_order_id: string
+  razorpay_payment_id: string
+  razorpay_signature: string
+}
+
+export interface PaymentVerifyResponse {
+  success: boolean
+  message: string
+  subscription: {
+    customer_email: string
+    plan_tier: string
+    billing_cycle: 'monthly' | 'yearly'
+    status: string
+    activated_at: string
+    current_period_end: string
+    payment_id: string
+    order_id: string
+  }
+}
+
+export interface PaymentSubscriptionResponse {
+  customer_email: string
+  status: string
+  plan_tier: string
+  billing_cycle: 'monthly' | 'yearly'
+  activated_at?: string
+  current_period_end?: string
+  payment_id?: string
+  order_id?: string
 }
 
 async function sleep(ms: number): Promise<void> {
@@ -589,6 +652,42 @@ export async function generateBusinessPitch(prompt: string): Promise<BusinessPit
       body: JSON.stringify({ prompt }),
     },
     'Business pitch generation failed',
+  )
+}
+
+export async function createPaymentCheckoutOrder(
+  params: PaymentCheckoutOrderRequest,
+): Promise<PaymentCheckoutOrderResponse> {
+  return requestJson<PaymentCheckoutOrderResponse>(
+    `${API_BASE}/api/v1/payments/checkout-order`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(params),
+    },
+    'Payment checkout initialization failed',
+  )
+}
+
+export async function verifyPayment(
+  params: PaymentVerifyRequest,
+): Promise<PaymentVerifyResponse> {
+  return requestJson<PaymentVerifyResponse>(
+    `${API_BASE}/api/v1/payments/verify`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(params),
+    },
+    'Payment verification failed',
+  )
+}
+
+export async function getPaymentSubscription(email: string): Promise<PaymentSubscriptionResponse> {
+  return requestJson<PaymentSubscriptionResponse>(
+    `${API_BASE}/api/v1/payments/subscription?email=${encodeURIComponent(email)}`,
+    { method: 'GET' },
+    'Subscription fetch failed',
   )
 }
 

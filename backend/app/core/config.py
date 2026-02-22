@@ -37,6 +37,10 @@ class Settings(BaseSettings):
     USITC_API_URL: str = "https://hts.usitc.gov/api"
     EXCHANGE_RATE_API_URL: str = "https://api.exchangerate-api.com/v4/latest/USD"
     ALPHA_VANTAGE_API_KEY: str = ""
+    RAZORPAY_KEY_ID: str = ""
+    RAZORPAY_KEY_SECRET: str = ""
+    RAZORPAY_WEBHOOK_SECRET: str = ""
+    RAZORPAY_CURRENCY: str = "USD"
 
     # CORS
     CORS_ORIGINS: list[str] = ["http://localhost:3000"]

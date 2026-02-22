@@ -91,6 +91,7 @@ Important variables:
 - AI Providers: `GROQ_API_KEY`, `GEMINI_API_KEY`, `MEGALLM_API_KEY`
 - HS/AI routing: `HS_CLASSIFIER_PROVIDER`, `HS_IMAGE_CLASSIFIER_PROVIDER`
 - FX Forecasting: `ALPHA_VANTAGE_API_KEY`
+- Payments (Razorpay): `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`, `RAZORPAY_CURRENCY`
 
 Never put API keys in frontend code. Keep secrets in backend env only.
 
@@ -106,6 +107,7 @@ Base prefix: `/api/v1`
 - Compliance: `/compliance/*`
 - Cargo: `/cargo/*`
 - Forex Forecast: `/forex/forecast`
+- Payments: `/payments/checkout-order`, `/payments/verify`, `/payments/subscription`, `/payments/webhook`
 - Analytics: `/analytics/*`
 - Business: `/business/*`
 
@@ -150,4 +152,3 @@ scripting_ninjas/
 - If frontend cannot reach backend, verify backend is running on `:8000`.
 - If FX forecast fails, verify `ALPHA_VANTAGE_API_KEY` and API limits.
 - If Prophet backend errors occur, ensure compatible versions from `backend/requirements.txt` are installed.
-
